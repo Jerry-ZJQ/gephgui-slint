@@ -21,69 +21,14 @@ use slint::{ComponentHandle};
 
 use crate::{user::load_secret};
 
-
-const SINGLE_INSTANCE_PORT: u16 = 8765;
-// An instance checker via tiny TCP listener
-fn start_single_instance_listener(
-    window: slint::Weak<GephWindow>,
-) -> anyhow::Result<bool> {
-    let server = match tiny_http::Server::http(
-        format!("127.0.0.1:{SINGLE_INSTANCE_PORT}")
-    ) {
-        Ok(server) => server,
-
-        // Port already occupied → another Geph instance is running.
-        Err(_) => {
-            use std::io::Write;
-
-            if let Ok(mut stream) =
-                std::net::TcpStream::connect(
-                    format!("127.0.0.1:{SINGLE_INSTANCE_PORT}")
-                )
-            {
-                let _ = stream.write_all(
-                    b"GET /__show HTTP/1.0\r\nHost: localhost\r\n\r\n"
-                );
-            }
-
-            return Ok(false);
-        }
-    };
-
-    std::thread::spawn(move || {
-        for request in server.incoming_requests() {
-            if request.url() == "/__show" {
-                let weak_window = window.clone();
-
-                let _ = slint::invoke_from_event_loop(move || {
-                    if let Some(window) = weak_window.upgrade() {
-                        window.show().ok();
-                        // Can add set_focus or bring forward logic here
-                    }
-                });
-
-                let _ = request.respond(
-                    tiny_http::Response::from_string("ok")
-                );
-            } else {
-                let _ = request.respond(
-                    tiny_http::Response::from_string("not found")
-                        .with_status_code(404)
-                );
-            }
-        }
-    });
-
-    Ok(true)
-}
-
-
+// Main entrance of the application
 fn main() -> Result<(), slint::PlatformError> {
 
 	// Create Slint Window
     let window = GephWindow::new()?;
 
     // prevent 2nd GUI instance from being created
+    // by using a tiny TCP listener binding
     match start_single_instance_listener(window.as_weak()) {
         Ok(true) => {}
         Ok(false) => return Ok(()),
@@ -165,4 +110,59 @@ fn main() -> Result<(), slint::PlatformError> {
     }
 
     window.run()
+}
+
+const SINGLE_INSTANCE_PORT: u16 = 8765;
+// An instance checker via tiny TCP listener
+fn start_single_instance_listener(
+    window: slint::Weak<GephWindow>,
+) -> anyhow::Result<bool> {
+    let server = match tiny_http::Server::http(
+        format!("127.0.0.1:{SINGLE_INSTANCE_PORT}")
+    ) {
+        Ok(server) => server,
+
+        // Port already occupied → another Geph instance is running.
+        Err(_) => {
+            use std::io::Write;
+
+            if let Ok(mut stream) =
+                std::net::TcpStream::connect(
+                    format!("127.0.0.1:{SINGLE_INSTANCE_PORT}")
+                )
+            {
+                let _ = stream.write_all(
+                    b"GET /__show HTTP/1.0\r\nHost: localhost\r\n\r\n"
+                );
+            }
+
+            return Ok(false);
+        }
+    };
+
+    std::thread::spawn(move || {
+        for request in server.incoming_requests() {
+            if request.url() == "/__show" {
+                let weak_window = window.clone();
+
+                let _ = slint::invoke_from_event_loop(move || {
+                    if let Some(window) = weak_window.upgrade() {
+                        window.show().ok();
+                        // Can add set_focus or bring forward logic here
+                    }
+                });
+
+                let _ = request.respond(
+                    tiny_http::Response::from_string("ok")
+                );
+            } else {
+                let _ = request.respond(
+                    tiny_http::Response::from_string("not found")
+                        .with_status_code(404)
+                );
+            }
+        }
+    });
+
+    Ok(true)
 }
