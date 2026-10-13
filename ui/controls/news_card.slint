@@ -2,10 +2,11 @@ import { Metrics } from "../theme/metrics.slint";
 import { Colors } from "../theme/colors.slint";
 import { Typography } from "../theme/typography.slint";
 import { ScrollView } from "std-widgets.slint";
+import { L10n } from "../l10n.slint";
 
 export component NewsCard inherits Rectangle {
 
-    in property <string> news_card_title: "News";
+    in property <string> news_card_title: L10n.text.news;
 
     VerticalLayout {
 

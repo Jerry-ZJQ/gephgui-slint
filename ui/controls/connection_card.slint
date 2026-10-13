@@ -7,6 +7,7 @@ import { Metrics } from "../theme/metrics.slint";
 import { HorizontalBox } from "std-widgets.slint";
 
 import { ConnInfo, SelectedServer, AccountStatus, LoginState, ConnectionState } from "../ui_state.slint";
+import { L10n } from "../l10n.slint";
 
 export component ConnectionCard inherits Rectangle {
 
@@ -14,7 +15,7 @@ export component ConnectionCard inherits Rectangle {
 
     in property <string> selected_server: 
         SelectedServer.country == "Auto" 
-            ? "Automatic" 
+            ? L10n.text.auto 
             : SelectedServer.country + " / " + SelectedServer.city;
 
     // matching properties with ConnInfo
@@ -27,7 +28,7 @@ export component ConnectionCard inherits Rectangle {
     private property <string> server_name:
         ConnInfo.conn_state == ConnectionState.Connected ? ConnInfo.country + " / " + ConnInfo.city : root.selected_server;
     in property <string> exit_ip: 
-        ConnInfo.conn_state == ConnectionState.Connected ? ConnInfo.exit_ip : "Auto-select least loaded server";
+        ConnInfo.conn_state == ConnectionState.Connected ? ConnInfo.exit_ip : L10n.text.conn-help;
     in property <string> flag_country:
         ConnInfo.conn_state == ConnectionState.Connected ? ConnInfo.country : SelectedServer.country;
 

@@ -5,6 +5,7 @@ import { Icons } from "../theme/resources.slint";
 
 import { CountryFlags } from "../theme/resources.slint";
 import { LoadLevel, ServerEntry, ServerSection } from "../ui_state.slint";
+import { L10n } from "../l10n.slint";
 
 export component AutoButton inherits Rectangle {
         
@@ -53,7 +54,7 @@ export component AutoButton inherits Rectangle {
             Text {
                 width: parent.width;
                 height: parent.height;
-                text: "Automatic";
+                text: L10n.text.auto;
                 horizontal-alignment: left;
                 vertical-alignment: center;
                 // y: 2px;
@@ -162,10 +163,18 @@ export component ServerDivider inherits Rectangle {
 export component ServerSection inherits Rectangle {
     
     in property <string> server_type;
+    in property <string> section_title:
+        root.server_type == "Core"
+            ? L10n.text.core
+            : root.server_type == "Streaming"
+                ? L10n.text.streaming
+                : "" ;
     in property <string> helptext: 
         root.server_type == "Core"
-        ? "Best balance of security and speed for everyday browsing."
-        : "Optimized for video services and region-locked media.";
+            ? L10n.text.core-help
+            : root.server_type == "Streaming"
+                ? L10n.text.streaming-help
+                : "" ;
     in property <[ServerEntry]> servers;
 
     callback server_button_clicked(country: string, city: string);
@@ -179,9 +188,9 @@ export component ServerSection inherits Rectangle {
 
         ServerDivider {}
 
-        section_title := Text {
+        section := Text {
 
-            text: server_type;
+            text: root.section_title;
             color: Colors.text_main;
             font-size: Typography.font_section;
             font-weight: Typography.weight_title;

@@ -4,6 +4,7 @@ import { Metrics } from "../theme/metrics.slint";
 import { ScrollView, Switch } from "std-widgets.slint";
 
 import { TunnelSettings, ProxySettings, SettingActions, AccountStatus, LoginState } from "../ui_state.slint";
+import { L10n } from "../l10n.slint";
 
 export component SettingsPage inherits Rectangle {
 
@@ -13,6 +14,8 @@ export component SettingsPage inherits Rectangle {
     in property <bool> plus_features: AccountStatus.account_level == "Plus" ? true : false;
 
     callback setting_changed(action: SettingActions, value: int);
+
+    callback language_selected(value: string);
 
     background: Colors.background;
 
@@ -27,42 +30,50 @@ export component SettingsPage inherits Rectangle {
             spacing: Metrics.spacing_large;
 
             SettingSection {
-                setting_type: "General";
+                setting_type: L10n.text.general;
 
                 SettingComboBox {
-                    setting_title: "Language";
-                    helptext: "Select language";
+                    setting_title: L10n.text.language;
+                    helptext: L10n.text.language-help;
+                    // update models if new languages added
+                    models: ["English", "简体中文", "繁體中文"];
+                    selected_value: L10n.selected_label;
+                    combo_box_selected(value) => {
+                        root.language_selected(value);
+                    }
                 }
             }
 
             if show_settings : SettingSection {
-                setting_type: "Connection";
+                setting_type: L10n.text.connection;
 
                 SettingSwitch {
                     switch_enabled: true;
-                    setting_title: "Allow Direct Connections";
-                    helptext: "Turn this off if your country has GFW!";
+                    setting_title: L10n.text.allow-direct;
+                    helptext: L10n.text.allow-direct-help;
                     toggle_state <=> TunnelSettings.allow_direct;
 
                     switch_toggled => {
-                        debug("[Sling Settings]: Allow Direct toggled");
+                        // debug("[Sling Settings]: Allow Direct toggled");
                         root.setting_changed(SettingActions.AllowDirect, 0);
                     }
                 }
             }
 
             if show_settings : SettingSection {
-                setting_type: "Features";
+                setting_type: L10n.text.features;
 
                 SettingSwitch {
                     // Disable switch for Free Users
                     switch_enabled: plus_features;
-                    setting_title: plus_features ? "Ads Filter" : "Ads Filter (Plus only)";
-                    helptext: "Filter ads and trackers";
+                    setting_title: plus_features
+                        ? L10n.text.ads-filter
+                        : L10n.text.ads-filter + L10n.text.plus-only;
+                    helptext: L10n.text.ads-filter-help;
                     toggle_state <=> TunnelSettings.ads_filter;
 
                     switch_toggled => {
-                        debug("[Sling Settings]: Ads Filter toggled");
+                        // debug("[Sling Settings]: Ads Filter toggled");
                         root.setting_changed(SettingActions.AdsFilter, 0);
                     }
                 }
@@ -70,68 +81,70 @@ export component SettingsPage inherits Rectangle {
                 SettingSwitch {
                     // Disable switch for Free Users
                     switch_enabled: plus_features;
-                    setting_title: plus_features ? "Adult Filter" : "Adult Filter (Plus only)";
-                    helptext: "Filter adult contents";
+                    setting_title: plus_features
+                        ? L10n.text.adult-filter
+                        : L10n.text.adult-filter + L10n.text.plus-only;
+                    helptext: L10n.text.adult-filter-help;
                     toggle_state <=> TunnelSettings.adult_filter;
 
                     switch_toggled => {
-                        debug("[Sling Settings]: Adult Filter toggled");
+                        // debug("[Sling Settings]: Adult Filter toggled");
                         root.setting_changed(SettingActions.AdultFilter, 0);
                     }
                 }
             }
 
             if show_settings : SettingSection {
-                setting_type: "Split Tunneling";
+                setting_type: L10n.text.split-tunneling;
 
                 SettingSwitch {
                     switch_enabled: true;
-                    setting_title: "Allow LAN Access";
-                    helptext: "Let local area network traffic bypass Geph";
+                    setting_title: L10n.text.allow-lan;
+                    helptext: L10n.text.allow-lan-help;
                     toggle_state <=> TunnelSettings.bypass_lan;
 
                     switch_toggled => {
-                        debug("[Sling Settings]: Bypass Lan toggled");
+                        // debug("[Sling Settings]: Bypass Lan toggled");
                         root.setting_changed(SettingActions.BypassLan, 0);
                     }
                 }
 
                 SettingSwitch {
                     switch_enabled: true;
-                    setting_title: "Exclude PRC traffic";
-                    helptext: "Let Chinese tracffic bypass Geph";
+                    setting_title: L10n.text.bypass-china;
+                    helptext: L10n.text.bypass-china-help;
                     toggle_state <=> TunnelSettings.bypass_china;
 
                     switch_toggled => {
-                        debug("[Sling Settings]: Bypass China toggled");
+                        // debug("[Sling Settings]: Bypass China toggled");
                         root.setting_changed(SettingActions.BypassChina, 0);
                     }
                 }
             }
 
             if show_settings : SettingSection {
-                setting_type: "Networking";
+                setting_type: L10n.text.networking;
 
                 SettingSwitch {
                     switch_enabled: true;
-                    setting_title: "VPN Mode";
-                    helptext: "Force all traffic to use Geph";
+                    setting_title: L10n.text.vpn-mode;
+                    helptext: L10n.text.vpn-mode-help;
                     toggle_state <=> TunnelSettings.global_vpn;
 
                     switch_toggled => {
-                        debug("[Sling Settings]: Global VPN toggled");
+                        // debug("[Sling Settings]: Global VPN toggled");
                         root.setting_changed(SettingActions.GlobalVPN, 0);
                     }
                 }
 
                 SettingSwitch {
                     switch_enabled: true;
-                    setting_title: "Local Proxy";
-                    helptext: "Expose Geph as SOCKS5/HTTP proxies";
+                    setting_title: L10n.text.local-proxy;
+                    helptext: L10n.text.local-proxy-help;
                     toggle_state <=> ProxySettings.enabled;
 
                     switch_toggled => {
-                        debug("[Sling Settings]: Local Proxy toggled");
+                        // debug("[Sling Settings]: Local Proxy toggled");
                         root.setting_changed(SettingActions.LocalProxy, 0);
                     }
                 }
@@ -139,32 +152,32 @@ export component SettingsPage inherits Rectangle {
                 // Only show proxy_setting items when local_proxy is on/true
                 if root.proxy_enabled : SettingSwitch {
                     switch_enabled: root.proxy_enabled;
-                    setting_title: "Auto-configure Proxy";
-                    helptext: "Makes most browsers use Geph";
+                    setting_title: L10n.text.auto-config;
+                    helptext: L10n.text.auto-config-help;
                     toggle_state <=> ProxySettings.auto_config;
 
                     switch_toggled => {
-                        debug("[Sling Settings]: Auto Config toggled");
+                        // debug("[Sling Settings]: Auto Config toggled");
                         root.setting_changed(SettingActions.AutoConfig, 0);
                     }
                 }
 
                 if root.proxy_enabled : SettingSwitch {
                     switch_enabled: root.proxy_enabled;
-                    setting_title: "Listening on All Interfaces";
-                    helptext: "Allow other device in local network to use this device as proxy";
+                    setting_title: L10n.text.listen-all;
+                    helptext: L10n.text.listen-all-help;
                     toggle_state <=> ProxySettings.listening_all;
 
                     switch_toggled => {
-                        debug("[Sling Settings]: Listen All toggled");
+                        // debug("[Sling Settings]: Listen All toggled");
                         root.setting_changed(SettingActions.ListenAll, 0);
                     }
                 }
 
                 if root.proxy_enabled : SettingSpinBox {
                     spinbox_enabled: root.proxy_enabled;
-                    setting_title: "SOCKS5 Port";
-                    helptext: "Port range 0 ~ 65535";
+                    setting_title: L10n.text.socks5-port;
+                    helptext: L10n.text.socks5-port-help;
                     max_number: 65535;
                     port_value <=> ProxySettings.socks5_port;
 
@@ -175,8 +188,8 @@ export component SettingsPage inherits Rectangle {
 
                 if root.proxy_enabled : SettingSpinBox {
                     spinbox_enabled: root.proxy_enabled;
-                    setting_title: "HTTP Proxy Port";
-                    helptext: "Port range 0 ~ 65535";
+                    setting_title: L10n.text.http-port;
+                    helptext: L10n.text.http-port-help;
                     max_number: 65535;
                     port_value <=> ProxySettings.http_port;
 
@@ -186,9 +199,9 @@ export component SettingsPage inherits Rectangle {
                 }
             }  
 
-            Rectangle {
-                height: 20px;
-            }
+            // Rectangle {
+            //     height: 20px;
+            // }
 
             Rectangle {
                 vertical-stretch: 1;

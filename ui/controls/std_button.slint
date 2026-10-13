@@ -5,7 +5,7 @@ import { Typography } from "../theme/typography.slint";
 export component StdButton inherits Rectangle {
 
     in property <string> btn_text: "Button";
-    in property <length> btn_height: Metrics.server_button_height;
+    // in property <length> btn_height: Metrics.server_button_height;
     in property <color> btn_color: Colors.std_button;
     in property <bool> hollowed: false;
 
@@ -13,7 +13,7 @@ export component StdButton inherits Rectangle {
 
     callback clicked();
 
-    height: btn_height;
+    height: Metrics.server_button_height;
 
     border-radius: Metrics.radius_button;
     border-width: Metrics.outline_thick;

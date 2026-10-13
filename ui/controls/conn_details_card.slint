@@ -1,0 +1,39 @@
+import { Metrics } from "../theme/metrics.slint";
+import { Colors } from "../theme/colors.slint";
+import { Typography } from "../theme/typography.slint";
+import { ScrollView } from "std-widgets.slint";
+import { L10n } from "../l10n.slint";
+
+export component ConnDetailsCard inherits Rectangle {
+
+    in property <string> card_title: L10n.text.conn-details;
+
+    VerticalLayout {
+
+        spacing: Metrics.spacing_small;
+
+        Text {
+            text: card_title;
+            color: Colors.text_main;
+            font-size: Typography.font_section;
+            font-weight: Typography.weight_title;
+            wrap: word-wrap;
+        }
+
+        Rectangle {
+            background: Colors.card;
+            border-color: Colors.divider;
+            border-radius: Metrics.radius_card;
+            border-width: Metrics.outline_slim;
+
+            ScrollView {
+                Text {
+                    text: "In development";
+                    font-size: Typography.font_body;
+                    color: Colors.text_aux;
+                    wrap: word-wrap;
+                }
+            }
+        }
+    }    
+}

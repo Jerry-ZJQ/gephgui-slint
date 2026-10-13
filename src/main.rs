@@ -1,3 +1,4 @@
+// Disable Windows cmd during App startup
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 slint::include_modules!();
@@ -8,6 +9,7 @@ mod ui_states;
 mod user;
 mod window;
 mod tray;
+mod l10n;
 
 #[cfg(any(target_os = "linux", target_os = "windows"))]
 mod bootstrap;
@@ -17,9 +19,11 @@ use std::{sync::Arc};
 use manager::manager_reachable;
 use ui_service::{UiService};
 
-use slint::{ComponentHandle};
+use sys_locale::get_locale;
 
-use crate::{user::load_secret};
+use slint::{ComponentHandle, SharedString};
+
+use crate::l10n::{apply_language, label_to_language, language_to_label, sys_locale_mapping};
 
 // Main entrance of the application
 fn main() -> Result<(), slint::PlatformError> {
@@ -39,6 +43,46 @@ fn main() -> Result<(), slint::PlatformError> {
 
     // Create Slint Tray
     let tray = GephTray::new()?;
+
+    // Get user preferred language from user-prefs.json
+    // if no preferred language, get system locale to set default language
+    // Get system locale to set language for first startup
+    // Fall back to en-US if preferred language is not available,
+    // or sys_locale doesn't match with available languages
+    let language = if let Some(value) = user::load_user_prefs("language") {
+        println!("Loaded language is: {}", value);
+        value
+    } else {
+        let locale = get_locale().unwrap_or_else(|| String::from("en-US"));
+        println!("Current sys locale is: {}", locale);
+        sys_locale_mapping(&locale).to_string()
+    };
+    // set language at App startup according to user prefs or system locale
+    if let Err(e) = apply_language(&language, &window, &tray) {
+        eprintln!("Failed to set UI language: {e:#}");
+    }
+    // sync select language label to window UI
+    let label= language_to_label(&language);
+    window.global::<L10n>().set_selected_label(label.into());
+
+    // process Slint callback for language change
+    let language_window = window.as_weak();
+    let language_tray = tray.as_weak();
+
+    window.on_language_changed(move |label: SharedString| {
+        let (Some(window), Some(tray)) =
+            (language_window.upgrade(), language_tray.upgrade())
+        else {
+            return;
+        };
+
+        let language = label_to_language(label.as_str());
+        if let Err(e) = apply_language(language, &window, &tray) {
+            eprintln!("Language change failed: {e:#}");
+        }
+        let language_label = language_to_label(language);
+        window.global::<L10n>().set_selected_label(language_label.into());
+    });
 
     // Show window by clicking Show Geph in Tray
     tray.on_show_window({
@@ -78,11 +122,11 @@ fn main() -> Result<(), slint::PlatformError> {
     if daemon_reachable {
         println!("Daemon check OK, starting UI service");
         // load secret from local settings.json
-        let secret = load_secret();
+        let secret = user::load_secret();
         // Initiate UiService
         let service = Arc::new(UiService::new(secret));
 
-        // Register slint callbacks and sync for window
+        // Register slint callbacks and sync for window and Tray
         window::window_callbacks::register_callbacks(
             &window,
             Arc::clone(&service),
@@ -112,8 +156,10 @@ fn main() -> Result<(), slint::PlatformError> {
     window.run()
 }
 
-const SINGLE_INSTANCE_PORT: u16 = 8765;
+
 // An instance checker via tiny TCP listener
+const SINGLE_INSTANCE_PORT: u16 = 8765;
+
 fn start_single_instance_listener(
     window: slint::Weak<GephWindow>,
 ) -> anyhow::Result<bool> {
@@ -148,7 +194,7 @@ fn start_single_instance_listener(
                 let _ = slint::invoke_from_event_loop(move || {
                     if let Some(window) = weak_window.upgrade() {
                         window.show().ok();
-                        // Can add set_focus or bring forward logic here
+                        // Can add set_focus or bring forward logic here as needed
                     }
                 });
 

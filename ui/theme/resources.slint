@@ -59,6 +59,12 @@ export global Icons {
 
     out property <image> free_icon:
         @image-url("../resources/icons/heart.svg");
+
+    out property <image> github:
+        @image-url("../resources/icons/github.svg");
+
+    out property <image> geph_forum:
+        @image-url("../resources/icons/discourse.svg");
 }
 
 export component CountryFlags {
@@ -101,6 +107,15 @@ export component CountryFlags {
         }
         if code == "TW" {
             return @image-url("../resources/flags/TW.svg");
+        }
+        if code == "FI" {
+            return @image-url("../resources/flags/FI.svg");
+        }
+        if code == "PT" {
+            return @image-url("../resources/flags/PT.svg");
+        }
+        if code == "RO" {
+            return @image-url("../resources/flags/RO.svg");
         }
 
         return @image-url("../resources/icons/refresh.svg");

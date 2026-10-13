@@ -181,10 +181,10 @@ pub async fn logout() -> anyhow::Result<()> {
 /// no `DaemonArgs` from the JS UI. This is what the tray "Connect" action uses:
 /// the manager keeps the last-used settings, so a bare `connect` brings the tunnel
 /// back up exactly as the user last had it.
-pub async fn reconnect() -> anyhow::Result<()> {
-    ctl(client().connect(session())).await?;
-    Ok(())
-}
+// pub async fn reconnect() -> anyhow::Result<()> {
+//     ctl(client().connect(session())).await?;
+//     Ok(())
+// }
 
 /// Switch the exit constraint. The manager persists it and, if currently
 /// connected, reconnects to the new exit WITHOUT a leak window (the kill switch
@@ -221,12 +221,12 @@ pub async fn manager_reachable() -> bool {
 
 /// Whether the user currently wants the tunnel up (mirrors the old "is the
 /// manager process running" semantics, which only existed while connected).
-pub async fn manager_connected() -> bool {
-    match client().get_settings().await {
-        Ok(Ok(settings)) => settings.connected,
-        _ => false,
-    }
-}
+// pub async fn manager_connected() -> bool {
+//     match client().get_settings().await {
+//         Ok(Ok(settings)) => settings.connected,
+//         _ => false,
+//     }
+// }
 
 /// Forward a raw engine RPC (`conn_info`, `broker_rpc`, `net_status`,
 /// `stat_history`, `recent_logs`, `start_registration`, …) to the manager, which

@@ -29,8 +29,11 @@ import {
 import { GephTray } from "geph_tray.slint";
 export { GephTray } from "geph_tray.slint";
 
-// import { TestTray } from "geph_tray.slint";
-// export { TestTray } from "geph_tray.slint";
+import "resources/fonts/InterVariable.ttf";
+import "resources/fonts/InterVariable-italic.ttf";
+
+import { Localization, L10n } from "l10n.slint";
+export { Localization, L10n } from "l10n.slint";
 
 // export globals for Rust sync & callbacks
 export { 
@@ -47,11 +50,10 @@ export {
 
 export component GephWindow inherits Window {
 
-    // Only defines font for MacOS and Windows
-    default-font-family:
-        Platform.os == macos
-            ? "Helvetica Neue"
-            : "Microsoft YaHei UI";
+    // Using Inter as the default Western font
+    // Non-western texts should fall back to system's default
+    default-font-family: "Inter Variable";
+    // default-font-family: "Helvetica Neue";
 
     icon: Icons.gephlogo;
 
@@ -63,22 +65,28 @@ export component GephWindow inherits Window {
     // in-out property <bool> anime_run: false;
 
     private property <string> current_title:
-        server_popup_opened ? "Select Exit Server":
-        current_page == 0 ? "Home" :
-        current_page == 1 ? "Account" :
-        current_page == 2 ? "Settings" :
-        current_page == 3 ? "About":
+        server_popup_opened ? L10n.text.select-server :
+        current_page == 0 ? L10n.text.home :
+        current_page == 1 ? L10n.text.account :
+        current_page == 2 ? L10n.text.settings :
+        current_page == 3 ? L10n.text.about:
                             "";
 
-    callback login_requested(string);
+    callback login_requested(secret: string);
     callback logout_requested();
-    callback manage_account_requested();
+    callback billing_page_requested();
     callback auto_selected();
     callback exit_selected(country: string, city: string);
 
     callback toggle_connect();
     callback setting_requested(action: SettingActions, value: int);
     callback server_list_opened();
+
+    callback language_changed(label: string);
+
+    callback github_requested();
+    callback forum_requested();
+    callback geph_site_requested();
 
     title: "Geph";
 
@@ -109,7 +117,14 @@ export component GephWindow inherits Window {
                 }
             }
 
-            if (root.current_page == 0) : HomePage {}
+            if (root.current_page == 0) : HomePage {
+                extend_requested => {
+                    root.billing_page_requested();
+                }
+                upgrade_requested => {
+                    root.billing_page_requested();
+                }
+            }
 
             if (root.current_page == 1) : AccountPage {
                 logging_state: AccountStatus.login_status;
@@ -124,7 +139,7 @@ export component GephWindow inherits Window {
                 }
 
                 manage_account_requested => {
-                    root.manage_account_requested();
+                    root.billing_page_requested();
                 }
             }
 
@@ -132,9 +147,22 @@ export component GephWindow inherits Window {
                 setting_changed(action, value) => {
                     root.setting_requested(action, value);
                 }
+                language_selected(value) => {
+                    root.language_changed(value);
+                }
             }
 
-            if (root.current_page == 3) : AboutPage {}
+            if (root.current_page == 3) : AboutPage {
+                github_clicked => {
+                    root.github_requested();
+                }
+                forum_clicked => {
+                    root.forum_requested();
+                }
+                official_clicked => {
+                    root.geph_site_requested();
+                }
+            }
         }
 
         BottomBar {

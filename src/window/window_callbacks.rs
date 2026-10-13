@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use crate::user::{user_login, user_logout};
+use crate::user::{
+    user_login, user_logout, open_billing_page, open_url, 
+    GITHUB_URL, GEPH_FORUM_URL, GEPH_WEBSITE_URL,
+};
 use crate::{GephWindow, SettingActions};
 use crate::ui_states::{
     UiConnState, 
@@ -316,6 +319,36 @@ pub fn register_callbacks(window: &GephWindow, ui_svc: Arc<UiService>) {
             service.set_login_state(LoginState::LoggedOut).await;
             service.poll_all();
         }).detach();
+    });
+
+    // callback process for billing_page_requested to open system browser
+    // for combined Manage Account, Plus Upgrade and Extend
+    let billing_service = service.clone();
+    window.on_billing_page_requested(move || {
+        let service = Arc::clone(&billing_service);
+        geph5_rt::spawn(async move {
+            let secret = service.current_secret().await;
+            if let Err(e) = open_billing_page(&secret) {
+                eprintln!("Failed to open billing page: {e:#}");
+            }
+        }).detach();
+    });
+
+    // callback process for in-app urls opening in browser
+    window.on_github_requested(|| {
+        if let Err(e) = open_url(GITHUB_URL) {
+            eprintln!("Failed to open GitHub: {e:#}");
+        }
+    });
+    window.on_forum_requested(|| {
+        if let Err(e) = open_url(GEPH_FORUM_URL) {
+            eprintln!("Failed to open Geph Forum: {e:#}");
+        }
+    });
+    window.on_geph_site_requested(|| {
+        if let Err(e) = open_url(GEPH_WEBSITE_URL) {
+            eprintln!("Failed to open Geph official site: {e:#}");
+        }
     });
 
     // callback for server list popup and trigger immediate server list refresh

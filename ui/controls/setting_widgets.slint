@@ -39,6 +39,10 @@ export component SettingSwitch inherits Rectangle {
             }
         }
 
+        Rectangle {
+            horizontal-stretch: 1;
+        }
+
         Switch {
             enabled: switch_enabled;
             checked <=> root.toggle_state;
@@ -54,6 +58,10 @@ export component SettingComboBox inherits Rectangle {
 
     in property <string> setting_title;
     in property <string> helptext;
+    in property <[string]> models;
+    in-out property <string> selected_value;
+
+    callback combo_box_selected(value: string);
 
     HorizontalLayout {
 
@@ -79,11 +87,19 @@ export component SettingComboBox inherits Rectangle {
             }
         }
 
+        Rectangle {
+            horizontal-stretch: 1;
+        }
+
         ComboBox {
-            model: ["English"];
+            model: root.models;
+            current-value <=> root.selected_value;
             width: 120px;
             height: 32px;
             y: ( parent.height - self.height ) / 2;
+            selected(current-value) => {
+                combo_box_selected(self.current-value);
+            }
         }
     }
 }
@@ -123,13 +139,17 @@ export component SettingSpinBox inherits Rectangle {
             }
         }
 
+        Rectangle {
+            horizontal-stretch: 1;
+        }
+
         SpinBox {
             enabled: root.spinbox_enabled;
             horizontal-alignment: right;
             maximum: max_number;
             value: port_value;
-            width: 120px;
-            height: 32px;
+            width: 110px;
+            height: 28px;
             y: ( parent.height - self.height ) / 2;
 
             edited(value) => {
@@ -139,7 +159,8 @@ export component SettingSpinBox inherits Rectangle {
 
         StdButton {
             btn_text: "√";
-            btn_height: 20px;
+            height: 20px;
+            width: 16px;
             btn_color: Colors.bottom_bar;
             y: ( parent.height - self.height ) / 2;
 

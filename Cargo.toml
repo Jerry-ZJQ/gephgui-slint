@@ -25,9 +25,13 @@ winit = "0.30.13"
 winres = "0.1.12"
 tiny_http = "0.12"
 sys-locale = "0.3.2"
+directories = "6.0.0"
+webbrowser = "1.2.4"
+url = "2.5.8"
 
 [build-dependencies]
 slint-build = "1.17.1"
+serde_json = "1"
 
 # ShellExecuteExW("runas") for the bootstrap's UAC-elevated `geph5 register-manager`
 # repair path (bootstrap.rs); same windows-sys line as geph5 itself.

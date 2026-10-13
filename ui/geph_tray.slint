@@ -12,38 +12,41 @@ import {
     SettingActions,
 } from "ui_state.slint";
 
+import { L10n, Localization } from "l10n.slint";
 
 export component GephTray inherits SystemTrayIcon {
 
     icon:
-    ConnInfo.conn_state == ConnectionState.Connected
-        ? Icons.gephlogo
-        : ConnInfo.conn_state == ConnectionState.Connecting
-            ? Icons.gephlogo_yellow_dot
-            : Icons.gephlogo_gray;
+        ConnInfo.conn_state == ConnectionState.Connected
+            ? Icons.gephlogo
+            : ConnInfo.conn_state == ConnectionState.Connecting
+                ? Icons.gephlogo_yellow_dot
+                : Icons.gephlogo_gray;
 
     tooltip: "Geph";
 
     in property <string> connect_control:
-        ConnInfo.conn_state == ConnectionState.Disconnected ? "Connect" :
-        ConnInfo.conn_state == ConnectionState.Connecting ? "Cancel" :
-        "Disconnect";
+        ConnInfo.conn_state == ConnectionState.Disconnected 
+        ? L10n.text.connect
+        : ConnInfo.conn_state == ConnectionState.Connecting 
+            ? L10n.text.cancel
+            : L10n.text.disconnect;
 
     in property <string> selected_server: 
         SelectedServer.country == "Auto" 
-            ? "Automatic" 
+            ? L10n.text.auto 
             : SelectedServer.country + " / " + SelectedServer.city;
 
     private property <string> server_name:
         ConnInfo.conn_state == ConnectionState.Connected
-        ? ConnInfo.country + " / " + ConnInfo.city
-        : root.selected_server;
+            ? ConnInfo.country + " / " + ConnInfo.city
+            : root.selected_server;
 
     in property <bool> item_enabled: AccountStatus.login_status != LoggedOut;
 
     Menu {
         MenuItem {
-            title: "Show Geph";
+            title: L10n.text.show-geph;
             activated => {
                 show_window();
             }
@@ -52,17 +55,21 @@ export component GephTray inherits SystemTrayIcon {
         MenuSeparator {}
 
         if item_enabled : Menu {
-            title: "Server:   " + root.server_name;
+            title: L10n.text.server + root.server_name;
 
             MenuItem {
-                title: "Automatic";
+                title: L10n.text.auto;
                 activated => {
                     auto_selected();
                 }
             }
 
             for section in ServerList.sections : Menu {
-                title: section.category;
+                title: section.category == "Core"
+                    ? L10n.text.core
+                    : section.category == "Streaming"
+                        ? L10n.text.streaming
+                        : "";
                 for server in section.servers : MenuItem {
                     title: server.country + " / " + server.city + " - " + server.load;
                     activated => {
@@ -82,7 +89,7 @@ export component GephTray inherits SystemTrayIcon {
         MenuSeparator {}
 
         if item_enabled : MenuItem {
-            title: "Global VPN";
+            title: L10n.text.vpn-mode;
             checkable: true;
             checked <=> TunnelSettings.global_vpn;
             activated => {
@@ -91,10 +98,10 @@ export component GephTray inherits SystemTrayIcon {
         }
 
         if item_enabled : Menu {
-            title: "Split Tunneling";
+            title: L10n.text.split-tunneling;
             
             MenuItem {
-                title: "Allow LAN Access";
+                title: L10n.text.allow-lan;
                 checkable: true;
                 checked <=> TunnelSettings.bypass_lan;
                 activated => {
@@ -102,7 +109,7 @@ export component GephTray inherits SystemTrayIcon {
                 }
             }
             MenuItem {
-                title: "Bypass China";
+                title: L10n.text.bypass-china;
                 checkable: true;
                 checked <=> TunnelSettings.bypass_china;
                 activated => {
@@ -114,7 +121,7 @@ export component GephTray inherits SystemTrayIcon {
         MenuSeparator {}
 
         MenuItem {
-            title: "Quit";
+            title: L10n.text.quit;
             activated => { quit(); }
         }
     }

@@ -5,6 +5,7 @@ import { Typography } from "../theme/typography.slint";
 import { AnimationBar } from "../controls/animation_bar.slint";
 
 import { LoginState, AccountStatus } from "../ui_state.slint";
+import { L10n } from "../l10n.slint";
 
 
 export component AccountLogInView inherits Rectangle {
@@ -39,7 +40,7 @@ export component LoggingWaitView inherits Rectangle {
         spacing: Metrics.spacing_medium;
 
         Text {
-            text: "Authenticating...";
+            text: L10n.text.authenticating;
             font-size: Typography.font_section;
             font-weight: Typography.weight_title;
             color: Colors.text_main;
@@ -96,7 +97,7 @@ export component AccountPage inherits Rectangle {
     background: Colors.background;
 
     if logging_state == LoginState.LoggedOut : AccountLogInView {
-        login_helptext: "Login with your account secret";
+        login_helptext: L10n.text.login-help;
         login_requested(secret) => {
             root.login_requested(secret);
         }

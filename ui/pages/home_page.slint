@@ -4,11 +4,17 @@ import { CountryFlags, Icons } from "../theme/resources.slint";
 import { Metrics } from "../theme/metrics.slint";
 import { PlusUsageCard, FreeUsageCard } from "../controls/usage_cards.slint";
 import { NewsCard } from "../controls/news_card.slint";
+import { BrokerCard } from "../controls/broker_card.slint";
+import { ConnDetailsCard } from "../controls/conn_details_card.slint";
+
 
 import { AccountStatus, LoginState } from "../ui_state.slint";
 import { AnimationBar } from "../controls/animation_bar.slint";
 
 export component HomePage inherits Rectangle {
+
+    callback extend_requested();
+    callback upgrade_requested();
 
     background: Colors.background;
 
@@ -24,11 +30,21 @@ export component HomePage inherits Rectangle {
             background: transparent;
         }
 
-        if AccountStatus.account_level == "Plus" : PlusUsageCard {}
-        
-        if AccountStatus.account_level == "Free" : FreeUsageCard {}
+        if AccountStatus.account_level == "Plus" : PlusUsageCard {
+            extend_clicked => {
+                root.extend_requested();
+            }
+        }
 
-        NewsCard {
+        if AccountStatus.account_level == "Free" : FreeUsageCard {
+            upgrade_clicked => {
+                root.upgrade_requested();
+            }
+        }
+
+        BrokerCard {}
+
+        ConnDetailsCard {
             vertical-stretch: 1;
         }
     }

@@ -7,11 +7,12 @@ import { AnimationBar } from "animation_bar.slint";
 import { VerticalLineDivider } from "divider.slint";
 import { GridBox } from "std-widgets.slint";
 import { AccountStatus } from "../ui_state.slint";
+import { L10n } from "../l10n.slint";
 
 export component LogInCard inherits Rectangle {
 
-    in property <string> helptext_1: "Enter your account secret to log in";
-    in property <string> helptext_2: "Or not having an account secret?";
+    in property <string> helptext_1: L10n.text.login-help;
+    in property <string> helptext_2: L10n.text.register-help;
 
     callback login_clicked(string);
     callback register_clicked();
@@ -21,7 +22,7 @@ export component LogInCard inherits Rectangle {
         spacing: Metrics.spacing_small;
 
         Text {
-            text: "Log in";
+            text: L10n.text.login;
             font-size: Typography.font_section;
             font-weight: Typography.weight_title;
             color: Colors.text_main;
@@ -52,7 +53,7 @@ export component LogInCard inherits Rectangle {
                 }
 
                 login_button := StdButton {
-                    btn_text: "Log In";
+                    btn_text: L10n.text.login;
                     clicked() => {
                         root.login_clicked(secret_input.secret);
                     }
@@ -65,7 +66,7 @@ export component LogInCard inherits Rectangle {
                 }
 
                 register_button := StdButton {
-                    btn_text: "Register";
+                    btn_text: L10n.text.register;
                     hollowed: true;
                     clicked => {
                         root.register_clicked();
@@ -85,7 +86,7 @@ export component AccountInfoCard inherits Rectangle {
     in property <string> secret: AccountStatus.secret;
     in property <string> account_level: AccountStatus.account_level;
     in property <string> plus_expire_date: AccountStatus.expire_date;
-    in property <string> invite_code: "ABCDEFGHIJKLMNOP";
+    in property <string> invite_code: AccountStatus.invite_code;
 
     callback manage_account_clicked();
     callback logout_clicked();
@@ -95,7 +96,7 @@ export component AccountInfoCard inherits Rectangle {
         spacing: Metrics.spacing_small;
 
         Text {
-            text: "Account Info";
+            text: L10n.text.account-info;
             font-size: Typography.font_section;
             font-weight: Typography.weight_title;
             color: Colors.text_main;
@@ -114,7 +115,7 @@ export component AccountInfoCard inherits Rectangle {
                 spacing: Metrics.spacing_medium;
 
                 Text {
-                    text: "Account Secret";
+                    text: L10n.text.account-secret;
                     font-size: Typography.font_body;
                     font-weight: Typography.weight_title;
                     color: Colors.text_main;
@@ -134,7 +135,7 @@ export component AccountInfoCard inherits Rectangle {
 
                     Row {
                         Text {
-                            text: "Account Level";
+                            text: L10n.text.account-level;
                             font-size: Typography.font_body;
                             font-weight: Typography.weight_title;
                             color: Colors.text_main;
@@ -146,11 +147,9 @@ export component AccountInfoCard inherits Rectangle {
                         }
                     }
 
-                    if account_level == "Plus" :
-
-                    Row {
+                    if account_level == "Plus" : Row {
                         Text {
-                            text: "Plus Expire";
+                            text: L10n.text.plus-expire;
                             font-size: Typography.font_body;
                             font-weight: Typography.weight_title;
                             color: Colors.text_main;
@@ -164,7 +163,7 @@ export component AccountInfoCard inherits Rectangle {
 
                     Row {
                         Text {
-                            text: "Invite Code";
+                            text: L10n.text.invite-code;
                             font-size: Typography.font_body;
                             font-weight: Typography.weight_title;
                             color: Colors.text_main;
@@ -184,14 +183,14 @@ export component AccountInfoCard inherits Rectangle {
                 }
 
                 StdButton {
-                    btn_text: "Manage Account";
+                    btn_text: L10n.text.manage-account;
                     clicked => {
                         root.manage_account_clicked();
                     }
                 }
 
                 StdButton {
-                    btn_text: "Log Out";
+                    btn_text: L10n.text.logout;
                     hollowed: true;
                     clicked => {
                         root.logout_clicked();
@@ -201,7 +200,7 @@ export component AccountInfoCard inherits Rectangle {
                 VerticalLineDivider {}
 
                 StdButton {
-                    btn_text: "Delete Account (fast click 10x)";
+                    btn_text: L10n.text.delete-account;
                     btn_color: Colors.status_dot_red;
                     hollowed: true;
                     clicked => {

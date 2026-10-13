@@ -3,13 +3,14 @@ import { Colors } from "../theme/colors.slint";
 import { StdButton } from "std_button.slint";
 
 import { ConnInfo, AccountStatus, LoginState, ConnectionState } from "../ui_state.slint";
+import { L10n } from "../l10n.slint";
 
 export component PrimaryButton inherits StdButton {
 
     btn_color: Colors.pri_button;
-    btn_height: Metrics.pri_button_height;
+    height: Metrics.pri_button_height;
     btn_text: 
-        ConnInfo.conn_state == ConnectionState.Disconnected ? "CONNECT" :
-        ConnInfo.conn_state == ConnectionState.Connecting ? "CANCEL" :
-        "DISCONNECT";
+        ConnInfo.conn_state == ConnectionState.Disconnected ? L10n.text.connect :
+        ConnInfo.conn_state == ConnectionState.Connecting ? L10n.text.cancel :
+        L10n.text.disconnect;
 }

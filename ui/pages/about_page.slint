@@ -5,8 +5,14 @@ import { Metrics } from "../theme/metrics.slint";
 import { Typography } from "../theme/typography.slint";
 
 import { Icons } from "../theme/resources.slint";
+import { NewsCard } from "../controls/news_card.slint";
+import { IconButton } from "../controls/icon_button.slint";
 
 export component AboutPage inherits Rectangle {
+
+    callback github_clicked();
+    callback forum_clicked();
+    callback official_clicked();
 
     background: Colors.background;
 
@@ -15,27 +21,49 @@ export component AboutPage inherits Rectangle {
         padding: Metrics.padding_large;
         spacing: Metrics.spacing_medium;
 
-        Rectangle {
+        NewsCard {
+            vertical-stretch: 1;
+        }
 
-            background: Colors.card;
-            border-radius: Metrics.radius_card;
-            border-color: Colors.divider;
-            border-width: 1px;
+        HorizontalLayout {
+            spacing: Metrics.spacing_large;
 
-            VerticalLayout {
-                padding: 12px;
-                Text {
-                    text: "Version 0.1\n\nGephgui-slint is the GUI for Geph developed with Slint. Best for those don't like the offical WebUI.";
-                    font-size: Typography.font_body;
-                    color: Colors.text_main;
-                    wrap: word-wrap;
-                    vertical-alignment: center;
+            IconButton {
+                btn_icon: Icons.github;
+                clicked => {
+                    root.github_clicked();
+                }
+            }
+            IconButton {
+                btn_icon: Icons.geph_forum;
+                clicked => {
+                    root.forum_clicked();
+                }
+            }
+            IconButton {
+                btn_icon: Icons.gephlogo;
+                clicked => {
+                    root.official_clicked();
                 }
             }
         }
-        
-        Rectangle {
-            vertical-stretch: 1;
+
+        version := Text {
+            text: "Version 0.2.0";
+            font-size: Typography.font_caption;
+            color: Colors.text_main;
+            wrap: word-wrap;
+            vertical-alignment: bottom;
+            horizontal-alignment: center;
+        }
+
+        about_slint_app := Text {
+            text: "Gephgui-slint is a GUI for the Geph VPN, developed with the Slint toolkit and runs as a native Rust App. Best for users who don't like the Geph official WebUI App (gephgui-wry).";
+            font-size: Typography.font_caption;
+            color: Colors.text_main;
+            wrap: word-wrap;
+            vertical-alignment: center;
+            horizontal-alignment: center;
         }
     }
 }

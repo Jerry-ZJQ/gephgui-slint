@@ -1,0 +1,50 @@
+import { Metrics } from "../theme/metrics.slint";
+import { Colors } from "../theme/colors.slint";
+import { Typography } from "../theme/typography.slint";
+import { Icons } from "../theme/resources.slint";
+
+export component IconButton inherits Rectangle {
+
+    in property <image> btn_icon;
+    in property <color> btn_color: Colors.std_button;
+    in property <bool> hollowed: true;
+
+    private property <float> button_scale: touch_area.pressed ? 0.97 : 1.0;
+
+    callback clicked();
+
+    height: Metrics.server_button_height;
+    preferred-width: self.height * 2;
+
+    border-radius: Metrics.radius_button;
+    border-width: Metrics.outline_thick;
+    border-color: btn_color;
+
+    background: hollowed ? Colors.background : btn_color;
+
+    horizontal-stretch: 1;
+
+    transform-origin: {
+        x: self.width / 2,
+        y: self.height / 2
+    };
+
+    transform-scale: button_scale;
+
+    animate transform-scale {
+        duration: 50ms;
+        easing: ease-out;
+    }
+
+    touch_area := TouchArea {
+        mouse-cursor: MouseCursor.pointer;
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    icon_image := Image {
+        source: btn_icon;
+        height: parent.height * 2 / 3;
+    }
+}

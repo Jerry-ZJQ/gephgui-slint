@@ -1,0 +1,94 @@
+// Localization data structure
+
+export struct Localization {
+    // menu and layout texts
+    home: string,
+    news: string,
+    account: string,
+    settings: string,
+    about: string,
+    select_server: string,
+    show_geph: string,
+    quit: string,
+
+    // connection texts
+    connect: string,
+    cancel: string,
+    disconnect: string,
+    conn_help: string,
+    server: string,
+    service_status: string,
+    conn_details: string,
+
+    // server list texts
+    core: string,
+    core_help: string,
+    streaming: string,
+    streaming_help: string,
+    auto: string,
+
+    // account texts
+    account_info: string,
+    account_secret: string,
+    account_level: string,
+    plus_expire: string,
+    invite_code: string,
+    free_note: string,
+    login: string,
+    login_help: string,
+    input_prompt: string,
+    authenticating: string,
+    logout: string,
+    register: string,
+    register_help: string,
+    manage_account: string,
+    delete_account: string,
+    expire: string,
+    days_remain: string,
+    unlimited: string,
+    upgrade: string,
+    extend: string,
+
+    // settings category texts
+    general: string,
+    connection: string,
+    features: string,
+    split_tunneling: string,
+    networking: string,
+
+    // setting item texts
+    language: string,
+    language_help: string,
+    theme: string,
+    theme_help: string,
+    allow_direct: string,
+    allow_direct_help: string,
+    connected_quit: string,
+    connected_quit_help: string,
+    ads_filter: string,
+    ads_filter_help: string,
+    adult_filter: string,
+    adult_filter_help: string,
+    allow_lan: string,
+    allow_lan_help: string,
+    bypass_china: string,
+    bypass_china_help: string,
+    vpn_mode: string,
+    vpn_mode_help: string,
+    local_proxy: string,
+    local_proxy_help: string,
+    auto_config: string,
+    auto_config_help: string,
+    listen_all: string,
+    listen_all_help: string,
+    socks5_port: string,
+    socks5_port_help: string,
+    http_port: string,
+    http_port_help: string,
+    plus_only: string,
+}
+
+export global L10n {
+    in-out property <string> selected_label;
+    in property <Localization> text;
+}
