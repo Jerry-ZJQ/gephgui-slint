@@ -13,7 +13,7 @@ export component SettingSwitch inherits Rectangle {
     in property <bool> switch_enabled;
     in-out property <bool> toggle_state;
 
-    callback switch_toggled();
+    callback switch_toggled(value: bool);
 
     HorizontalLayout {
 
@@ -48,7 +48,7 @@ export component SettingSwitch inherits Rectangle {
             checked <=> root.toggle_state;
             toggled => {
                 // debug("Switch checked: ", self.checked);
-                root.switch_toggled();
+                root.switch_toggled(self.checked);
             }
         }
     }

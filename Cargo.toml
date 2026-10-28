@@ -1,6 +1,6 @@
 [package]
 name = "gephgui-slint"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2024"
 
 [dependencies]
@@ -28,6 +28,9 @@ sys-locale = "0.3.2"
 directories = "6.0.0"
 webbrowser = "1.2.4"
 url = "2.5.8"
+arboard = "3.7.0"
+reqwest = { version = "0.12", features = ["json"] }
+semver = "1"
 
 [build-dependencies]
 slint-build = "1.17.1"

@@ -8,6 +8,7 @@ use tokio::sync::{watch, RwLock};
 
 use crate::LoginState;
 use crate::manager;
+use crate::user;
 
 use geph5_misc_rpc::manager_control::{TunnelSettings};
 
@@ -26,8 +27,9 @@ const BURST_INTERVAL: Duration = Duration::from_millis(200);
 
 #[derive(Clone)]
 pub struct UiService {
-    // User account secret cache
+    // User account secret and invite code cache
     secret: Arc<RwLock<Option<String>>>,
+    invite_code: Arc<RwLock<Option<String>>>,
 
     // login_state and watch channel
     login_state: Arc<RwLock<LoginState>>,   
@@ -60,6 +62,7 @@ impl UiService {
         } else {
             LoginState::LoggedOut
         };
+        let invite_code = user::load_user_prefs("invite_code");
 
         let (login_state_tx, _) =
             watch::channel(login_state);
@@ -87,6 +90,8 @@ impl UiService {
 
         Self {
             secret: Arc::new(RwLock::new(secret)),
+            invite_code: Arc::new(RwLock::new(invite_code)),
+            
             login_state: Arc::new(RwLock::new(login_state)),
             login_state_tx,
 
@@ -145,7 +150,7 @@ impl UiService {
 
         } else {
             // Secret is None and set UI State to LoggedOut
-            // self.set_login_state(LoginState::LoggedOut);
+            self.set_login_state(LoginState::LoggedOut).await;
         }
 
         Ok(())
@@ -255,7 +260,7 @@ impl UiService {
                         let conn_info = self.current_conn_info().await;
 
                         if conn_info.state == burst_target {
-                            println!("[Poller] ConnInfo: burst finished");
+                            // println!("[Poller] ConnInfo: burst finished");
 
                             burst = false;
 
@@ -271,7 +276,7 @@ impl UiService {
                         break;
                     }
 
-                    println!("[Poller] ConnInfo: enter burst");
+                    // println!("[Poller] ConnInfo: enter burst");
                     let origin_conn_info = self.current_conn_info().await;
                     match origin_conn_info.state {
                         UiConnState::Disconnected => {
@@ -452,6 +457,8 @@ impl UiService {
                     {
                         println!("[Poller] UserInfo error: {e:?}");
                     }
+                    // poll NetStatus right after account_level updated for ServerList refresh
+                    self.poll_net_status();
                 }
 
                 // Pause polling when logged out and resume if secret exists
@@ -551,12 +558,12 @@ impl UiService {
             .clone()
     }
 
-    pub async fn current_secret(&self) -> String {
-        self.secret
-            .read()
-            .await
-            .clone()
-            .expect("current_secret() called with null secret")
+    pub async fn current_secret(&self) -> Option<String> {
+        self.secret.read().await.clone()
+    }
+
+    pub async fn current_invite_code(&self) -> Option<String> {
+        self.invite_code.read().await.clone()
     }
 
     pub async fn set_login_state(&self, target_state: LoginState) {
@@ -571,6 +578,17 @@ impl UiService {
 
     pub async fn clear_secret(&self) {
         *self.secret.write().await = None;
+    }
+
+    pub async fn set_invite_code (&self, invite_code: Option<String>) {
+        *self.invite_code.write().await = invite_code;
+    }
+
+    pub async fn clear_invite_code(&self) {
+        *self.invite_code.write().await = None;
+        // clear user_id and invite_code from user_prefs.json as well
+        let _ = user::save_user_prefs("user_id", "".into());
+        let _ = user::save_user_prefs("invite_code", "".into());
     }
 
     pub async fn clear_service(&self) {

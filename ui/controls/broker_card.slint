@@ -6,7 +6,7 @@ import { L10n } from "../l10n.slint";
 
 export component BrokerCard inherits Rectangle {
 
-    in property <string> card_title: L10n.text.service-status;
+    in property <string> card_title: L10n.text.broker-status;
 
     VerticalLayout {
 
@@ -26,14 +26,19 @@ export component BrokerCard inherits Rectangle {
             border-radius: Metrics.radius_card;
             border-width: Metrics.outline_slim;
 
-            ScrollView {
+            VerticalLayout {
+                padding: Metrics.padding_large;
+                spacing: Metrics.spacing_small;
                 Text {
-                    text: "In development";
+                    text: "In development, to display the Geph broker access status according to the request result of broker RPC, like UserInfo and NetStatus.";
                     font-size: Typography.font_body;
                     color: Colors.text_aux;
                     wrap: word-wrap;
                 }
+                Rectangle {
+                    vertical-stretch: 1;
+                }
             }
         }
-    }    
+    }
 }

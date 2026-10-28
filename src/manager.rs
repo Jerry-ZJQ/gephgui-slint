@@ -309,7 +309,7 @@ pub async fn fetch_user_info(secret: String) -> anyhow::Result<UserInfo> {
     };
 
     let resp = call_daemon_rpc(request).await?;
-    println!("[RPC resp]: {resp:?}");
+    // println!("[RPC resp]: {resp:?}");
     Ok(resp)
 }
 

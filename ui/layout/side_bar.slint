@@ -2,7 +2,7 @@ import { NavButton } from "../controls/nav_button.slint";
 import { Colors } from "../theme/colors.slint";
 import { Icons } from "../theme/resources.slint";
 
-import { AccountStatus, LoginState } from "../ui_state.slint";
+import { AccountStatus, LoginState, About } from "../ui_state.slint";
 
 export component SideBar inherits Rectangle {
 
@@ -46,6 +46,7 @@ export component SideBar inherits Rectangle {
             clicked => {
                 root.current_page = 3;
             }
+            show_notifier: About.update-available;
         }
 
         Rectangle {

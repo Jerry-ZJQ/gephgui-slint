@@ -1,0 +1,41 @@
+import { Colors } from "../theme/colors.slint";
+import { Typography } from "../theme/typography.slint";
+import { Metrics } from "../theme/metrics.slint";
+
+export component NewsItem inherits Rectangle {
+
+    in property <string> news_title: "News item";
+    in property <string> news_body: "News body";
+    in property <bool> clickable: false;
+    in property <string> url: "https://github.com/Jerry-ZJQ/geph-slint-pkg";
+    
+    TouchArea {
+        width: parent.width;
+        height: parent.height;
+
+        enabled: root.clickable;
+        mouse-cursor: MouseCursor.pointer;
+
+        VerticalLayout {
+            spacing: Metrics.spacing_tiny;
+
+            Text {
+                text: root.news_title;
+                font-size: Typography.font_body;
+                font-weight: Typography.weight_title;
+                color: Colors.text_main;
+                wrap: word-wrap;
+            }
+            Text {
+                text: root.news_body;
+                font-size: Typography.font_sub_body;
+                color: Colors.text_main;
+                wrap: word-wrap;
+            }
+        }
+
+        clicked => {
+            Platform.open-url(root.url);
+        }
+    }
+}

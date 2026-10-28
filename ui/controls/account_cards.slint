@@ -8,11 +8,14 @@ import { VerticalLineDivider } from "divider.slint";
 import { GridBox } from "std-widgets.slint";
 import { AccountStatus } from "../ui_state.slint";
 import { L10n } from "../l10n.slint";
+import { IconButton} from "icon_button.slint";
+import { Icons } from "../theme/resources.slint";
 
 export component LogInCard inherits Rectangle {
 
-    in property <string> helptext_1: L10n.text.login-help;
-    in property <string> helptext_2: L10n.text.register-help;
+    in property <string> login_helptext: L10n.text.login-help;
+    in property <string> reg_helptext: L10n.text.register-help;
+    in property <color> helptext_color: Colors.text_main;
 
     callback login_clicked(string);
     callback register_clicked();
@@ -47,9 +50,10 @@ export component LogInCard inherits Rectangle {
                 }
 
                 Text {
-                    text: helptext_1;
+                    text: login_helptext;
                     font-size: Typography.font_body;
-                    color: Colors.text_main;
+                    color: helptext_color;
+                    wrap: word-wrap;
                 }
 
                 login_button := StdButton {
@@ -60,9 +64,10 @@ export component LogInCard inherits Rectangle {
                 }
 
                 Text {
-                    text: helptext_2;
+                    text: reg_helptext;
                     font-size: Typography.font_body;
                     color: Colors.text_main;
+                    wrap: word-wrap;
                 }
 
                 register_button := StdButton {
@@ -87,9 +92,13 @@ export component AccountInfoCard inherits Rectangle {
     in property <string> account_level: AccountStatus.account_level;
     in property <string> plus_expire_date: AccountStatus.expire_date;
     in property <string> invite_code: AccountStatus.invite_code;
+    private property <bool> secret_reveal: false;
 
     callback manage_account_clicked();
     callback logout_clicked();
+
+    callback copy_secret_clicked();
+    callback copy_inv_code_clicked();
     
     VerticalLayout {
 
@@ -121,10 +130,41 @@ export component AccountInfoCard inherits Rectangle {
                     color: Colors.text_main;
                 }
 
-                Text {
-                    text: secret;
-                    font-size: Typography.font_body;
-                    color: Colors.text_main;
+                HorizontalLayout {
+
+                    spacing: Metrics.spacing_medium;
+
+                    Text {
+                        text: secret_reveal ? secret : AccountStatus.secret_mask;
+                        font-size: Typography.font_body;
+                        color: Colors.text_main;
+                    }
+
+                    Rectangle {
+                        horizontal-stretch: 1;
+                    }
+
+                    IconButton {
+                        height: Typography.font_body;
+                        width: self.height;
+                        hollowed: false;
+                        btn_icon: secret_reveal ? Icons.hide : Icons.show;
+                        btn_color: transparent;
+                        clicked => {
+                            root.secret_reveal = !root.secret_reveal; 
+                        }
+                    }
+
+                    IconButton {
+                        height: Typography.font_body;
+                        width: self.height;
+                        hollowed: false;
+                        btn_icon: Icons.copy;
+                        btn_color: transparent;
+                        clicked => {
+                            root.copy_secret_clicked();
+                        }
+                    }
                 }
 
                 VerticalLineDivider {}
@@ -172,6 +212,17 @@ export component AccountInfoCard inherits Rectangle {
                             text: invite_code;
                             font-size: Typography.font_body;
                             color: Colors.text_main;
+                            overflow: elide;
+                        }
+                        IconButton {
+                            height: Typography.font_body;
+                            width: self.height;
+                            hollowed: false;
+                            btn_icon: Icons.copy;
+                            btn_color: transparent;
+                            clicked => {
+                                root.copy_inv_code_clicked();
+                            }
                         }
                     }
                 }

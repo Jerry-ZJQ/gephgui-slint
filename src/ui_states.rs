@@ -179,7 +179,6 @@ impl RpcRawStates {
             };
 
         UiUserInfo {
-            // account_secret: String::new(),
             account_level,
             expire_date,
             remaining_days,
@@ -351,65 +350,84 @@ impl RpcRawStates {
     // Convert Raw ConnInfo to Slint UI data model
     pub fn to_ui_conn_info(&self) -> UiConnInfo {
         match &self.conn_info {
-            ConnInfo::Disconnected => UiConnInfo {
-                state: UiConnState::Disconnected,
-                country: String::new(),
-                city: String::new(),
-                exit: String::new(),
-                bridge: String::new(),
-                protocol: String::new(),
-            },
+            ConnInfo::Disconnected => UiConnInfo::default(),
 
             ConnInfo::Connecting => UiConnInfo {
                 state: UiConnState::Connecting,
-                country: String::new(),
-                city: String::new(),
-                exit: String::new(),
-                bridge: String::new(),
-                protocol: String::new(),
+                ..Default::default()
             },
 
             ConnInfo::Connected { sessions } => {
-                if sessions.is_empty() {
-                    return UiConnInfo {
-                        state: UiConnState::Connecting,
-                        country: String::new(),
-                        city: String::new(),
-                        exit: String::new(),
-                        bridge: String::new(),
-                        protocol: String::new(),
-                    };
-                }
-
-                // Find the country with the most sessions.
-                let mut counts = std::collections::HashMap::new();
+                // 1. Count Exit IPs. Preserve first-seen order for ties.
+                let mut exit_counts: HashMap<std::net::IpAddr, usize> = HashMap::new();
+                let mut exit_order = Vec::new();
 
                 for session in sessions {
-                    *counts.entry(session.exit.country).or_insert(0usize) += 1;
+                    let ip = session.exit.c2e_listen.ip();
+
+                    if !exit_counts.contains_key(&ip) {
+                        exit_order.push(ip);
+                    }
+                    *exit_counts.entry(ip).or_insert(0) += 1;
                 }
 
-                let best_country = counts
+                let exit_ip = exit_order
                     .into_iter()
-                    .max_by_key(|(_, count)| *count)
-                    .map(|(country, _)| country)
+                    .max_by_key(|ip| exit_counts[ip])
+                    .map(|ip| ip.to_string())
+                    .unwrap_or_default();
+
+                // 2. Select country/city using the most frequent country.
+                let mut country_counts = HashMap::new();
+                let mut country_order = Vec::new();
+
+                for session in sessions {
+                    let country = session.exit.country;
+
+                    if !country_counts.contains_key(&country) {
+                        country_order.push(country);
+                    }
+                    *country_counts.entry(country).or_insert(0usize) += 1;
+                }
+
+                let best_country = country_order
+                    .into_iter()
+                    .max_by_key(|country| country_counts[country])
                     .unwrap();
 
-                // Keep the first session belonging to the primary country.
                 let primary = sessions
                     .iter()
                     .find(|session| session.exit.country == best_country)
                     .unwrap();
 
+                // 3. Group by (Bridge IP, Protocol), preserving first-seen order.
+                let mut groups: Vec<UiSessionGroup> = Vec::new();
+
+                for session in sessions {
+                    let bridge = session
+                        .bridge
+                        .map(|addr| addr.to_string())
+                        .unwrap_or_else(|| "Direct".to_string());
+
+                    if let Some(group) = groups.iter_mut().find(|group| {
+                        group.bridge == bridge && group.protocol == session.protocol
+                    }) {
+                        group.count += 1;
+                    } else {
+                        groups.push(UiSessionGroup {
+                            bridge,
+                            protocol: session.protocol.clone(),
+                            count: 1,
+                        });
+                    }
+                }
+
                 UiConnInfo {
                     state: UiConnState::Connected,
                     country: primary.exit.country.alpha2().to_string(),
                     city: primary.exit.city.clone(),
-                    exit: primary.exit.c2e_listen.ip().to_string(),
-                    bridge: primary
-                        .bridge
-                        .map(|addr| addr.to_string())
-                        .unwrap_or_default(),
-                    protocol: primary.protocol.clone(),
+                    exit: exit_ip,
+                    sessions: groups,
                 }
             }
         }
@@ -419,7 +437,6 @@ impl RpcRawStates {
 // Data model for Slint UI consumption
 #[derive(Clone, Debug, PartialEq)]
 pub struct UiUserInfo {
-    // account_secret: String,
     pub account_level: String,
     pub expire_date: String,
     pub remaining_days: String,
@@ -550,8 +567,16 @@ pub struct UiConnInfo {
     pub country: String,
     pub city: String,
     pub exit: String,
+    pub sessions: Vec<UiSessionGroup>,
+    // pub bridge: String,
+    // pub protocol: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct UiSessionGroup {
     pub bridge: String,
     pub protocol: String,
+    pub count: usize,
 }
 
 impl Default for UiConnInfo {
@@ -561,28 +586,9 @@ impl Default for UiConnInfo {
             country: String::new(),
             city: String::new(),
             exit: String::new(),
-            bridge: String::new(),
-            protocol: String::new(),
+            sessions: Vec::new(),
+            // bridge: String::new(),
+            // protocol: String::new(),
         }
     }
 }
-
-// Language setting UI data model
-// #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-// pub enum LanguageOption {
-//     English,
-//     SimplifiedChinese,
-//     TraditionalChinese,
-//     Russian,
-//     Arabic,
-//     Farsi,
-//     Ukrainian,
-// }
-
-// #[derive(Clone, Eq, Debug, Hash, PartialEq)]
-// pub struct LanguageItem {
-//     pub language: LanguageOption,
-//     pub display_name: String,
-// }
-
-// pub type LanguageItems = Vec<LanguageItem>;

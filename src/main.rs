@@ -1,4 +1,4 @@
-// Disable Windows cmd during App startup
+// Disable Windows cmd on App startup
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 slint::include_modules!();
@@ -10,6 +10,7 @@ mod user;
 mod window;
 mod tray;
 mod l10n;
+mod updater;
 
 #[cfg(any(target_os = "linux", target_os = "windows"))]
 mod bootstrap;
@@ -19,11 +20,11 @@ use std::{sync::Arc};
 use manager::manager_reachable;
 use ui_service::{UiService};
 
-use sys_locale::get_locale;
-
 use slint::{ComponentHandle, SharedString};
 
-use crate::l10n::{apply_language, label_to_language, language_to_label, sys_locale_mapping};
+use crate::l10n::{apply_language, init_l10n, label_to_language, language_to_label};
+use crate::user::{init_user_prefs};
+use crate::updater::{init_version, check_update};
 
 // Main entrance of the application
 fn main() -> Result<(), slint::PlatformError> {
@@ -44,31 +45,47 @@ fn main() -> Result<(), slint::PlatformError> {
     // Create Slint Tray
     let tray = GephTray::new()?;
 
-    // Get user preferred language from user-prefs.json
-    // if no preferred language, get system locale to set default language
-    // Get system locale to set language for first startup
-    // Fall back to en-US if preferred language is not available,
-    // or sys_locale doesn't match with available languages
-    let language = if let Some(value) = user::load_user_prefs("language") {
-        println!("Loaded language is: {}", value);
-        value
-    } else {
-        let locale = get_locale().unwrap_or_else(|| String::from("en-US"));
-        println!("Current sys locale is: {}", locale);
-        sys_locale_mapping(&locale).to_string()
-    };
-    // set language at App startup according to user prefs or system locale
-    if let Err(e) = apply_language(&language, &window, &tray) {
-        eprintln!("Failed to set UI language: {e:#}");
-    }
-    // sync select language label to window UI
-    let label= language_to_label(&language);
-    window.global::<L10n>().set_selected_label(label.into());
+    // initiate UI language
+    init_l10n(&window, &tray);
+    init_version(&window);
 
     // process Slint callback for language change
+    // keep this callback process in main() for now
+    // if more callbacks for both window & tray operations
+    // introduced in future, consider moving such logics to a new module
     let language_window = window.as_weak();
     let language_tray = tray.as_weak();
 
+    // initiate user_prefs: quit_on_close and disconnect_on_quit settings in UI
+    init_user_prefs(&window);
+
+    // Check App update
+    let update_window = window.as_weak();
+    geph5_rt::spawn(async move {
+        match check_update().await {
+            Ok(Some(release)) => {
+                let window_weak = update_window.clone();
+
+                let _ = slint::invoke_from_event_loop(move || {
+                    if let Some(window) = window_weak.upgrade() {
+                        let about = window.global::<About>();
+
+                        about.set_update_available(true);
+                        about.set_latest_version(release.tag_name.into());
+                        about.set_release_url(release.html_url.into());
+                    }
+                });
+            }
+            Ok(None) => {
+                println!("Application is up to date");
+            }
+            Err(e) => {
+                eprintln!("Update check failed: {e}");
+            }
+        }
+    }).detach();
+
+    // callback process for language change
     window.on_language_changed(move |label: SharedString| {
         let (Some(window), Some(tray)) =
             (language_window.upgrade(), language_tray.upgrade())
@@ -96,19 +113,39 @@ fn main() -> Result<(), slint::PlatformError> {
     });
 
     // Quit app by clicking Quit in Tray
-    tray.on_quit(|| {
+    let window_quit = window.as_weak();
+    tray.on_quit(move || {
         println!("Quit from Tray");
-        slint::quit_event_loop().unwrap();
+        if let Some(window) = window_quit.upgrade() {
+            let disconnect_on_quit = window.global::<UserPrefs>().get_disconnect_on_quit();
+            process_app_quit(disconnect_on_quit);
+        } else {
+            // backup procedure: quit app with disconnect_on_quit as false
+            // in case acquiring disconnect_on_quit not successful
+            process_app_quit(false);
+        }
     });
 
-    // Click window's close button to hide
+    // Click window's close button to hide or quit
+    let window_close = window.as_weak();
     window.window().on_close_requested(move || {
-        println!("Hide window");
-        slint::CloseRequestResponse::HideWindow
+        let Some(window) = window_close.upgrade() else {
+            return slint::CloseRequestResponse::HideWindow;
+        };
+
+        let quit_on_close = window.global::<UserPrefs>().get_quit_on_close();
+        if quit_on_close {
+            let disconnect_on_quit = window.global::<UserPrefs>().get_disconnect_on_quit();
+            process_app_quit(disconnect_on_quit);
+            println!("Quit on window close");
+        } else {
+            println!("Hide window");
+        }
+        slint::CloseRequestResponse::HideWindow 
     });
 
     // Make sure the privileged host manager is installed, current, and answering
-    // before we bring up the webview that talks to it. May show a native dialog and
+    // before we bring up the Slint UI that talks to it. May show a native dialog and
     // elevate via pkexec (Linux) or UAC (Windows), or ask for a relaunch; returns
     // false if we should exit now.
     #[cfg(any(target_os = "linux", target_os = "windows"))]
@@ -211,4 +248,23 @@ fn start_single_instance_listener(
     });
 
     Ok(true)
+}
+
+// The quit app function
+fn process_app_quit(disconnect_on_quit: bool) {
+    if disconnect_on_quit {
+        geph5_rt::spawn(async move {
+            println!("Stop daemon on quit");
+            if let Err(e) = manager::stop_daemon().await {
+                eprintln!("Failed to stop daemon: {e}");
+            }
+            // Make sure quit event loop in Slint UI thread
+            slint::invoke_from_event_loop(|| {
+                slint::quit_event_loop().unwrap();
+            })
+            .unwrap();
+        }).detach();
+    } else {
+        slint::quit_event_loop().unwrap();
+    }
 }

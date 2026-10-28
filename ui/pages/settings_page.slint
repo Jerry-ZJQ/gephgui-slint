@@ -3,7 +3,7 @@ import { SettingSwitch, SettingComboBox, SettingSpinBox, SettingSection } from "
 import { Metrics } from "../theme/metrics.slint";
 import { ScrollView, Switch } from "std-widgets.slint";
 
-import { TunnelSettings, ProxySettings, SettingActions, AccountStatus, LoginState } from "../ui_state.slint";
+import { TunnelSettings, ProxySettings, SettingActions, AccountStatus, LoginState, UserPrefs } from "../ui_state.slint";
 import { L10n } from "../l10n.slint";
 
 export component SettingsPage inherits Rectangle {
@@ -16,6 +16,8 @@ export component SettingsPage inherits Rectangle {
     callback setting_changed(action: SettingActions, value: int);
 
     callback language_selected(value: string);
+    callback quit_on_close_toggled(value: bool);
+    callback disconnect_on_quit_toggled(value: bool);
 
     background: Colors.background;
 
@@ -35,11 +37,31 @@ export component SettingsPage inherits Rectangle {
                 SettingComboBox {
                     setting_title: L10n.text.language;
                     helptext: L10n.text.language-help;
-                    // update models if new languages added
-                    models: ["English", "简体中文", "繁體中文"];
+                    // maintain language expansion in Rust l10n.rs
+                    models: L10n.available_languages;
                     selected_value: L10n.selected_label;
                     combo_box_selected(value) => {
                         root.language_selected(value);
+                    }
+                }
+                
+                SettingSwitch {
+                    switch_enabled: true;
+                    setting_title: L10n.text.quit-on-close;
+                    helptext: L10n.text.quit-on-close-help;
+                    toggle_state <=> UserPrefs.quit_on_close;
+                    switch_toggled(checked) => {
+                        root.quit_on_close_toggled(checked);
+                    }
+                }
+
+                SettingSwitch {
+                    switch_enabled: true;
+                    setting_title: L10n.text.disconnect-on-quit;
+                    helptext: L10n.text.disconnect-on-quit-help;
+                    toggle_state <=> UserPrefs.disconnect_on_quit;
+                    switch_toggled(checked) => {
+                        root.disconnect_on_quit_toggled(checked);
                     }
                 }
             }
@@ -197,16 +219,11 @@ export component SettingsPage inherits Rectangle {
                         root.setting_changed(SettingActions.HttpPort, target_value);
                     }
                 }
-            }  
-
-            // Rectangle {
-            //     height: 20px;
-            // }
+            }
 
             Rectangle {
                 vertical-stretch: 1;
             }
-            
         }
     }
 }

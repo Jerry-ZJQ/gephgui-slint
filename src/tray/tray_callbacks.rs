@@ -27,7 +27,7 @@ pub fn register_callbacks(tray: &GephTray, ui_svc: Arc<UiService>) {
                     // Connect
                     println!("[Toggle Connect Action]: Connect");
 
-                    let secret = conn_service.current_secret().await;
+                    let secret = conn_service.current_secret().await.unwrap_or_default();
                     if let Err(e) =
                         manager::start_daemon(secret, settings).await                   
                     {
@@ -153,7 +153,7 @@ pub fn register_callbacks(tray: &GephTray, ui_svc: Arc<UiService>) {
     tray.on_setting_requested(move |action| {
         println!("[Tray Callback] TunnelSetting changed");
         let setting_service = Arc::clone(&setting_service);
-        // let service = setting_service.clone();
+        let service = setting_service.clone();
         
         geph5_rt::spawn(async move {
             let conn_info = setting_service.current_conn_info().await;
@@ -228,8 +228,8 @@ pub fn register_callbacks(tray: &GephTray, ui_svc: Arc<UiService>) {
                     }
                 }
             }
+            // Trigger burst polling for fast UI response  
+            service.poll_tunnel_settings();
         }).detach();
-        // no busrt polling call to reserve a debounce for setting items 
-        // service.poll_tunnel_settings();
     });
 }

@@ -41,8 +41,8 @@ fn sync_conn_info(tray: &GephTray, info: &UiConnInfo) {
     conn.set_country(info.country.clone().into());
     conn.set_city(info.city.clone().into());
     conn.set_exit_ip(info.exit.clone().into());
-    conn.set_bridge_ip(info.bridge.clone().into());
-    conn.set_protocol(info.protocol.clone().into());
+    // conn.set_bridge_ip(info.bridge.clone().into());
+    // conn.set_protocol(info.protocol.clone().into());
 }
 
 // Sync Settings to Slint Tray

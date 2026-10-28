@@ -15,7 +15,8 @@ export enum LoginState {
     LoggedOut,
     Authenticating,
     LoggedIn,
-    Unavailable,
+    SecretInvalid,
+    Timeout,
 }
 
 export enum LoadLevel { 
@@ -30,18 +31,26 @@ export enum AccountLevel {
     Unknown
 }
 
+export struct SessionGroup {
+    bridge: string,
+    protocol: string,
+    count: int,
+}
+
 export global ConnInfo {
-    in property <ConnectionState> conn_state;
+    in property <ConnectionState> conn_state: Disconnected;
     in property <string> country;
     in property <string> city;
     in property <string> exit_ip;
-    in property <string> bridge_ip;
-    in property <string> protocol;
+    in property <[SessionGroup]> sessions;
+    // in property <string> bridge_ip;
+    // in property <string> protocol;
 }
 
 export global AccountStatus {
-    in property <LoginState> login_status;
-    in property <string> secret: "••••••••••••••••••••••••";
+    in property <LoginState> login_status: LoggedOut;
+    in property <string> secret: "123456781234567812345678";
+    in property <string> secret_mask: "••••••••••••••••••••••••";
     in property <string> invite_code: "TEST_INVITE_CODE";
     in property <string> account_level;
     in property <string> expire_date;
@@ -102,4 +111,16 @@ export enum SettingActions {
     ListenAll,
     Sock5Port,
     HttpPort,
+}
+
+export global UserPrefs {
+    in-out property <bool> quit_on_close;
+    in-out property <bool> disconnect_on_quit;
+}
+
+export global About {
+    in property <string> app-version: "Unknown";
+    in property <bool> update-available: false;
+    in property <string> latest-version: "";
+    in property <string> release-url: "https://github.com/Jerry-ZJQ/geph-slint-pkg/releases/latest";
 }

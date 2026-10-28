@@ -1,11 +1,12 @@
 use std::{collections::HashMap};
 use anyhow::Result;
+use sys_locale;
 
 use crate::user;
 
 use crate::{Localization, L10n};
 use crate::{GephWindow, GephTray};
-use slint::{ComponentHandle};
+use slint::{ComponentHandle, ModelRc, VecModel};
 
 // Use embedded localization struct mapping
 // and embedded multi-language JSON resources
@@ -61,6 +62,13 @@ pub fn apply_language(
     Ok(())
 }
 
+// Available language list
+pub const AVAILABLE_LANGUAGES: &[&str] = &[
+    "English",
+    "简体中文",
+    "繁體中文",
+];
+
 // mapping language labels from Slint to Rust
 // update this mapping if new languages added
 pub fn label_to_language(label: &str) -> &'static str {
@@ -93,4 +101,37 @@ pub fn sys_locale_mapping(locale: &str) -> &'static str {
         // s if s == "ja" || s.starts_with("ja-") => "ja-JP",
         _ => "en-US",
     }
+}
+
+// read user preferred language from user_prefs.json
+// or match system locale language and then set the language at App startup
+pub fn init_l10n(window: &GephWindow, tray: &GephTray) {
+    // Set language options in Slint UI
+    let language_list = ModelRc::new(VecModel::from(
+        AVAILABLE_LANGUAGES.iter()
+        .map(|label| (*label).into())
+        .collect::<Vec<slint::SharedString>>(),
+    ));
+    window.global::<L10n>().set_available_languages(language_list);
+
+    // Get user preferred language from user-prefs.json
+    // if no preferred language, get system locale to set default language
+    // Get system locale to set language for first startup
+    // Fall back to en-US if preferred language is not available,
+    // or sys_locale doesn't match with available languages
+    let language = if let Some(value) = user::load_user_prefs("language") {
+        println!("Loaded language is: {}", value);
+        value
+    } else {
+        let locale = sys_locale::get_locale().unwrap_or_else(|| String::from("en-US"));
+        println!("Current sys locale is: {}", locale);
+        sys_locale_mapping(&locale).to_string()
+    };
+    // set language at App startup according to user prefs or system locale
+    if let Err(e) = apply_language(&language, &window, &tray) {
+        eprintln!("Failed to set UI language: {e:#}");
+    }
+    // sync selected language label to window UI
+    let label= language_to_label(&language);
+    window.global::<L10n>().set_selected_label(label.into());
 }

@@ -27,8 +27,15 @@ export component NewsCard inherits Rectangle {
             border-width: Metrics.outline_slim;
 
             ScrollView {
-                // insert news items
-                @children
+                width: parent.width;
+                height: parent.height;
+
+                VerticalLayout {
+                    padding: Metrics.padding_large;
+                    spacing: Metrics.spacing_large;
+                    // insert news items
+                    @children
+                }
             }
         }
     }    

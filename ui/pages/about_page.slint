@@ -7,6 +7,9 @@ import { Typography } from "../theme/typography.slint";
 import { Icons } from "../theme/resources.slint";
 import { NewsCard } from "../controls/news_card.slint";
 import { IconButton } from "../controls/icon_button.slint";
+import { L10n } from "../l10n.slint";
+import { About } from "../ui_state.slint";
+import { NewsItem } from "../controls/news_item.slint";
 
 export component AboutPage inherits Rectangle {
 
@@ -23,6 +26,17 @@ export component AboutPage inherits Rectangle {
 
         NewsCard {
             vertical-stretch: 1;
+
+            if About.update-available : NewsItem {
+                news_title: L10n.text.update-available;
+                news_body: "Version " + About.latest-version + L10n.text.go-for-update;
+                clickable: true;
+                url: About.release-url;
+            }
+
+            Rectangle {
+                vertical-stretch: 1;
+            }
         }
 
         HorizontalLayout {
@@ -30,18 +44,21 @@ export component AboutPage inherits Rectangle {
 
             IconButton {
                 btn_icon: Icons.github;
+                icon_scale: 0.8;
                 clicked => {
                     root.github_clicked();
                 }
             }
             IconButton {
                 btn_icon: Icons.geph_forum;
+                icon_scale: 0.7;
                 clicked => {
                     root.forum_clicked();
                 }
             }
             IconButton {
                 btn_icon: Icons.gephlogo;
+                icon_scale: 0.7;
                 clicked => {
                     root.official_clicked();
                 }
@@ -49,7 +66,7 @@ export component AboutPage inherits Rectangle {
         }
 
         version := Text {
-            text: "Version 0.2.0";
+            text: "Version " + About.app-version;
             font-size: Typography.font_caption;
             color: Colors.text_main;
             wrap: word-wrap;
@@ -58,7 +75,7 @@ export component AboutPage inherits Rectangle {
         }
 
         about_slint_app := Text {
-            text: "Gephgui-slint is a GUI for the Geph VPN, developed with the Slint toolkit and runs as a native Rust App. Best for users who don't like the Geph official WebUI App (gephgui-wry).";
+            text: L10n.text.app-intro;
             font-size: Typography.font_caption;
             color: Colors.text_main;
             wrap: word-wrap;

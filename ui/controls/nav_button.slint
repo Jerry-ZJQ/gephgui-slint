@@ -1,4 +1,6 @@
 import { Colors } from "../theme/colors.slint";
+import { About } from "../ui_state.slint";
+import { Metrics } from "../theme/metrics.slint";
 
 export component NavButton inherits Rectangle {
 
@@ -8,6 +10,7 @@ export component NavButton inherits Rectangle {
     in property <bool> selected: false;
     in property <bool> enabled: true;
     in property <image> icon;
+    in property <bool> show_notifier: false;
 
     callback clicked();
 
@@ -36,5 +39,25 @@ export component NavButton inherits Rectangle {
 
         horizontal-alignment: center;
         vertical-alignment: center;
+    }
+
+    // An overlay to show the notification mark 
+    popup_overlay := Rectangle {
+        
+        visible: show_notifier;
+
+        width: parent.width;
+        height: parent.height;
+
+        background: transparent;
+
+        Rectangle {
+            height: 8px;
+            width: 8px;
+            background: Colors.status_dot_red;
+            border-radius: self.height / 2;
+            x: 33px;
+            y: 7px;
+        }
     }
 }

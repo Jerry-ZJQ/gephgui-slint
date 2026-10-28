@@ -17,6 +17,7 @@ use crate::{GephWindow};
 use crate::ConnectionState;
 use crate::{
     ConnInfo,
+    SessionGroup,
     SelectedServer,
     LoadLevel,
     ServerEntry,
@@ -69,8 +70,20 @@ fn sync_conn_info(window: &GephWindow, info: &UiConnInfo) {
     conn.set_country(info.country.clone().into());
     conn.set_city(info.city.clone().into());
     conn.set_exit_ip(info.exit.clone().into());
-    conn.set_bridge_ip(info.bridge.clone().into());
-    conn.set_protocol(info.protocol.clone().into());
+
+    let sessions: Vec<SessionGroup> = info
+        .sessions
+        .iter()
+        .map(|session| SessionGroup {
+            bridge: session.bridge.clone().into(),
+            protocol: session.protocol.clone().into(),
+            count: session.count as i32,
+        })
+        .collect();
+
+    conn.set_sessions(ModelRc::new(VecModel::from(sessions)));
+    // conn.set_bridge_ip(info.bridge.clone().into());
+    // conn.set_protocol(info.protocol.clone().into());
 }
 
 fn sync_exit_selection(window: &GephWindow, selection: &UiExitSelection) {
@@ -143,7 +156,12 @@ pub fn sync_settings(window: &GephWindow, settings: &UiTunnelSettings) {
     proxy_settings.set_http_port(settings.proxy_settings.http_port as i32);
 }
 
-pub fn sync_user_info(window: &GephWindow, user_info: &UiUserInfo) {
+pub fn sync_user_info(
+    window: &GephWindow,
+    user_info: &UiUserInfo,
+    secret: &str,
+    invite_code: &str
+) {
     let account_status = window.global::<AccountStatus>();
 
     account_status.set_account_level(user_info.account_level.clone().into());
@@ -151,6 +169,9 @@ pub fn sync_user_info(window: &GephWindow, user_info: &UiUserInfo) {
     account_status.set_remaining_days(user_info.remaining_days.clone().into());
     account_status.set_remaining_percentage(user_info.remaining_percent.clone());
     account_status.set_remaining_usage(user_info.remaining_usage.clone().into());
+
+    account_status.set_secret(secret.into());
+    account_status.set_invite_code(invite_code.into());
 }
 
 // start Slint sync
@@ -311,17 +332,21 @@ pub fn start_sync(window: &GephWindow, service: Arc<UiService>) {
 
     // AccountStatus sync
     let weak_window_user_info = weak_window.clone();
+    let user_info_service = Arc::clone(&service);
     let mut user_info_rx = service.subscribe_user_info();
 
     geph5_rt::spawn(async move {
         // Initial sync
         {
             let info = user_info_rx.borrow().clone();
+            let secret = user_info_service.current_secret().await.unwrap_or_default();
+            let invite_code = user_info_service.current_invite_code().await.unwrap_or_default();
+
             let weak_window = weak_window_user_info.clone();
 
             let _ = slint::invoke_from_event_loop(move || {
                 if let Some(window) = weak_window.upgrade() {
-                    sync_user_info(&window, &info);
+                    sync_user_info(&window, &info, &secret, &invite_code);
                 }
             });
         }
@@ -329,11 +354,14 @@ pub fn start_sync(window: &GephWindow, service: Arc<UiService>) {
         // Future updates
         while user_info_rx.changed().await.is_ok() {
             let info = user_info_rx.borrow_and_update().clone();
+            let secret = user_info_service.current_secret().await.unwrap_or_default();
+            let invite_code = user_info_service.current_invite_code().await.unwrap_or_default();
+
             let weak_window = weak_window_user_info.clone();
 
             let _ = slint::invoke_from_event_loop(move || {
                 if let Some(window) = weak_window.upgrade() {
-                    sync_user_info(&window, &info);
+                    sync_user_info(&window, &info, &secret, &invite_code);
                 }
             });
         }

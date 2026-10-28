@@ -1,8 +1,14 @@
 use std::sync::Arc;
 
 use crate::user::{
-    user_login, user_logout, open_billing_page, open_url, 
-    GITHUB_URL, GEPH_FORUM_URL, GEPH_WEBSITE_URL,
+    GEPH_FORUM_URL,
+    GEPH_WEBSITE_URL,
+    GITHUB_URL,
+    open_billing_page,
+    open_url,
+    user_login,
+    user_logout,
+    copy_to_clipboard
 };
 use crate::{GephWindow, SettingActions};
 use crate::ui_states::{
@@ -11,7 +17,8 @@ use crate::ui_states::{
 };
 
 use crate::ui_service::UiService;
-use crate::manager::{self};
+use crate::manager;
+use crate::user;
 use geph5_misc_rpc::manager_control::{ProxySettings};
 use crate::LoginState;
 
@@ -36,7 +43,7 @@ pub fn register_callbacks(window: &GephWindow, ui_svc: Arc<UiService>) {
                     // Connect
                     println!("[Toggle Connect Action]: Connect");
 
-                    let secret = conn_service.current_secret().await;
+                    let secret = conn_service.current_secret().await.unwrap_or_default();
                     if let Err(e) =
                         manager::start_daemon(secret, settings).await                   
                     {
@@ -100,7 +107,7 @@ pub fn register_callbacks(window: &GephWindow, ui_svc: Arc<UiService>) {
                 }
             }
         }).detach();
-        // poll tunnel settings to trigger burst polling for fast UI response
+        // trigger burst polling for fast UI response
         service.poll_tunnel_settings();
     });
 
@@ -149,7 +156,7 @@ pub fn register_callbacks(window: &GephWindow, ui_svc: Arc<UiService>) {
                 }
             }
         }).detach();
-        // poll tunnel settings to trigger burst polling for fast UI response
+        // trigger burst polling for fast UI response
         service.poll_tunnel_settings();
     });
 
@@ -158,7 +165,7 @@ pub fn register_callbacks(window: &GephWindow, ui_svc: Arc<UiService>) {
     window.on_setting_requested(move |action, value| {
         println!("[Window Callback] TunnelSetting changed");
         let setting_service = Arc::clone(&setting_service);
-        // let service = setting_service.clone();
+        let service = setting_service.clone();
 
         geph5_rt::spawn(async move {
             let conn_info = setting_service.current_conn_info().await;
@@ -266,14 +273,26 @@ pub fn register_callbacks(window: &GephWindow, ui_svc: Arc<UiService>) {
                     }
                 }
             }
+            // Trigger burst polling for fast UI response
+            service.poll_tunnel_settings();
         }).detach();
-        // no busrt polling call to reserve a debounce for setting items 
-        // service.poll_tunnel_settings();
     });
+
+    // callbacks for user_prefs changes
+    window.on_quit_on_close_toggled(move |value: bool| {
+        user::save_user_prefs_bool("quit_on_close", value).unwrap_or_else(|e| {
+            eprintln!("Failed to save quit_on_close: {e}");
+        });
+    });
+
+    window.on_disconnect_on_quit_toggled(move |value: bool| {
+        user::save_user_prefs_bool("disconnect_on_quit", value).unwrap_or_else(|e| {
+            eprintln!("Failed to save disconnect_on_quit: {e}");
+        });
+    });   
 
     // callback for user login
     let login_service = Arc::clone(&service);
-
     window.on_login_requested(move |secret| {
         let login_service = Arc::clone(&login_service);
         let secret = secret.to_string();
@@ -288,17 +307,35 @@ pub fn register_callbacks(window: &GephWindow, ui_svc: Arc<UiService>) {
                     println!("[Window] Login succeeded: {secret_info:?}");
 
                     login_service.set_secret(secret).await;
+                    login_service.set_invite_code(secret_info.invite_code.clone()).await;
 
-                    login_service
-                        .set_login_state(LoginState::LoggedIn)
-                        .await;
+                    login_service.set_login_state(LoginState::LoggedIn).await;
                     // poll UserInfo right after login success to update UI
                     login_service.poll_user_info();
                 }
 
                 Err(e) => {
-                    println!("[Window] Login failed: {e:?}");
-                    login_service.set_login_state(LoginState::LoggedOut).await;
+                    eprintln!("[Window] Login failed: {e}");
+
+                    let error_msg = e.to_string();
+
+                    if error_msg.contains("retired")
+                        || error_msg.contains("invalid")
+                    {
+                        login_service
+                            .set_login_state(LoginState::SecretInvalid)
+                            .await;
+                    } else if error_msg.contains("timed out")
+                        || error_msg.contains("timeout")
+                    {
+                        login_service
+                            .set_login_state(LoginState::Timeout)
+                            .await;
+                    } else {
+                        login_service
+                            .set_login_state(LoginState::LoggedOut)
+                            .await;
+                    }
                 }
             }
         }).detach();
@@ -315,6 +352,7 @@ pub fn register_callbacks(window: &GephWindow, ui_svc: Arc<UiService>) {
             }
             // Clear secret and UIService state cache as well
             service.clear_secret().await;
+            service.clear_invite_code().await;
             service.clear_service().await;
             service.set_login_state(LoginState::LoggedOut).await;
             service.poll_all();
@@ -327,7 +365,7 @@ pub fn register_callbacks(window: &GephWindow, ui_svc: Arc<UiService>) {
     window.on_billing_page_requested(move || {
         let service = Arc::clone(&billing_service);
         geph5_rt::spawn(async move {
-            let secret = service.current_secret().await;
+            let secret = service.current_secret().await.unwrap_or_default();
             if let Err(e) = open_billing_page(&secret) {
                 eprintln!("Failed to open billing page: {e:#}");
             }
@@ -351,10 +389,27 @@ pub fn register_callbacks(window: &GephWindow, ui_svc: Arc<UiService>) {
         }
     });
 
-    // callback for server list popup and trigger immediate server list refresh
-    // let exit_refresh_service = service.clone();
-    // window.on_server_list_opened(move || {
-    //     let service = Arc::clone(&exit_refresh_service);
-    //     service.poll_net_status();
-    // });
+    // callback for copying secret to clipboard
+    let copy_secret_service = service.clone();
+    window.on_copy_secret_requested(move || {
+        let service = Arc::clone(&copy_secret_service);
+        geph5_rt::spawn(async move {
+            let secret = service.current_secret().await.unwrap_or_default();
+            if let Err(e) = copy_to_clipboard(&secret) {
+                eprintln!("Failed to copy Secret: {e:#}");
+            }
+        }).detach();
+    });
+
+    // callback for copying invite code to clipboard
+    let copy_inv_code_service = service.clone();
+    window.on_copy_inv_code_requested(move || {
+        let service = Arc::clone(&copy_inv_code_service);
+        geph5_rt::spawn(async move {
+            let invite_code = service.current_invite_code().await.unwrap_or_default();
+            if let Err(e) = copy_to_clipboard(&invite_code) {
+                eprintln!("Failed to copy Invite Code: {e:#}");
+            }
+        }).detach();
+    });
 }

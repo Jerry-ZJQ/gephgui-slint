@@ -24,6 +24,7 @@ import {
     ConnInfo,
     SelectedServer,
     SettingActions,
+    About,
 } from "ui_state.slint";
 
 import { GephTray } from "geph_tray.slint";
@@ -46,6 +47,8 @@ export {
     TunnelSettings,
     ProxySettings,
     SettingActions,
+    UserPrefs,
+    About,
 } from "ui_state.slint";
 
 export component GephWindow inherits Window {
@@ -83,10 +86,15 @@ export component GephWindow inherits Window {
     callback server_list_opened();
 
     callback language_changed(label: string);
+    callback quit_on_close_toggled(value: bool);
+    callback disconnect_on_quit_toggled(value: bool);
 
     callback github_requested();
     callback forum_requested();
     callback geph_site_requested();
+
+    callback copy_secret_requested();
+    callback copy_inv_code_requested();
 
     title: "Geph";
 
@@ -141,6 +149,14 @@ export component GephWindow inherits Window {
                 manage_account_requested => {
                     root.billing_page_requested();
                 }
+
+                copy_secret_requested => {
+                    root.copy_secret_requested();
+                }
+
+                copy_inv_code_requested => {
+                    root.copy_inv_code_requested();
+                }
             }
 
             if (root.current_page == 2) : SettingsPage {
@@ -149,6 +165,12 @@ export component GephWindow inherits Window {
                 }
                 language_selected(value) => {
                     root.language_changed(value);
+                }
+                quit_on_close_toggled(checked) => {
+                    root.quit_on_close_toggled(checked);
+                }
+                disconnect_on_quit_toggled(checked) => {
+                    root.disconnect_on_quit_toggled(checked);
                 }
             }
 

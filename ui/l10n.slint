@@ -15,10 +15,16 @@ export struct Localization {
     connect: string,
     cancel: string,
     disconnect: string,
+    disconnected: string,
+    connecting: string,
+    connected: string,
     conn_help: string,
     server: string,
-    service_status: string,
-    conn_details: string,
+    broker_status: string,
+    session_details: string,
+    exit_ip: string,
+    bridge_ip: string,
+    protocol: string,
 
     // server list texts
     core: string,
@@ -36,6 +42,8 @@ export struct Localization {
     free_note: string,
     login: string,
     login_help: string,
+    login_invalid_help: string,
+    login_timeout_help: string,
     input_prompt: string,
     authenticating: string,
     logout: string,
@@ -61,10 +69,12 @@ export struct Localization {
     language_help: string,
     theme: string,
     theme_help: string,
+    disconnect_on_quit: string,
+    disconnect_on_quit_help: string,
+    quit_on_close: string,
+    quit_on_close_help: string,
     allow_direct: string,
     allow_direct_help: string,
-    connected_quit: string,
-    connected_quit_help: string,
     ads_filter: string,
     ads_filter_help: string,
     adult_filter: string,
@@ -86,9 +96,13 @@ export struct Localization {
     http_port: string,
     http_port_help: string,
     plus_only: string,
+    update_available: string,
+    go_for_update: string,
+    app_intro: string,
 }
 
 export global L10n {
+    in-out property <[string]> available_languages: [];
     in-out property <string> selected_label;
     in property <Localization> text;
 }

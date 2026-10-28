@@ -1,0 +1,132 @@
+import { Metrics } from "../theme/metrics.slint";
+import { Colors } from "../theme/colors.slint";
+import { Typography } from "../theme/typography.slint";
+import { ScrollView, GridBox } from "std-widgets.slint";
+import { L10n } from "../l10n.slint";
+import { VerticalLineDivider } from "divider.slint";
+import { ConnInfo } from "../ui_state.slint";
+
+export component SessionCard inherits Rectangle {
+
+    in property <string> card_title: L10n.text.session-details;
+    private property <bool> connected: ConnInfo.conn_state == Connected ? true : false;
+
+    VerticalLayout {
+
+        spacing: Metrics.spacing_small;
+
+        Text {
+            text: card_title;
+            color: Colors.text_main;
+            font-size: Typography.font_section;
+            font-weight: Typography.weight_title;
+            wrap: word-wrap;
+        }
+
+        if connected : Rectangle {
+            background: Colors.card;
+            border-color: Colors.divider;
+            border-radius: Metrics.radius_card;
+            border-width: Metrics.outline_slim;
+
+            VerticalLayout {
+                padding: Metrics.padding_large;
+                spacing: Metrics.spacing_small;
+
+                HorizontalLayout {
+                    Text {
+                        text: L10n.text.exit-ip;
+                        color: Colors.text_main;
+                        font-size: Typography.font_body;
+                        font-weight: Typography.weight_title;
+                    }
+                    Rectangle {
+                        width: Metrics.spacing_large;
+                        horizontal-stretch: 1;
+                    }
+                    Text {
+                        text: ConnInfo.exit_ip;
+                        font-size: Typography.font_body;
+                        horizontal-alignment: right;
+                        color: Colors.text_main;
+                    }
+                }
+
+                VerticalLineDivider {}
+
+                HorizontalLayout {
+                    Text {
+                        text: L10n.text.bridge-ip;
+                        font-size: Typography.font_sub_body;
+                        wrap: char-wrap;
+                        font-weight: Typography.weight_title;
+                        color: Colors.text_main;
+                    }
+
+                    Rectangle {
+                        width: Metrics.spacing_large;
+                        horizontal-stretch: 1;
+                    }
+
+                    Text {
+                        text: L10n.text.protocol;
+                        font-size: Typography.font_sub_body;
+                        font-weight: Typography.weight_title;
+                        horizontal-alignment: right;
+                        color: Colors.text_main;
+                    }
+                }
+
+                GridLayout {
+                    for session[index] in ConnInfo.sessions : Row {
+                        Text {
+                            text: session.count > 1
+                                ? session.bridge + "  [" + session.count + "]"
+                                : session.bridge;
+                            font-size: Typography.font_caption;
+                            wrap: char-wrap;
+                            color: Colors.text_main;
+                        }
+                                                
+                        Rectangle {
+                            width: Metrics.spacing_large;
+                            horizontal-stretch: 1;
+                        }
+
+                        Text {
+                            text: session.protocol;
+                            font-size: Typography.font_caption;
+                            horizontal-alignment: right;
+                            color: Colors.text_main;
+                        }
+                    }
+                }
+                Rectangle {
+                    vertical-stretch: 1;
+                }
+            }
+        }
+
+        if !connected : Rectangle {
+            background: Colors.card;
+            border-color: Colors.divider;
+            border-radius: Metrics.radius_card;
+            border-width: Metrics.outline_slim;
+
+            VerticalLayout {
+                padding: Metrics.padding_large;
+                spacing: Metrics.spacing_small;
+
+                Text {
+                    text: L10n.text.disconnected;
+                    font-size: Typography.font_body;
+                    font-weight: Typography.weight_title;
+                }
+
+                Rectangle {
+                    vertical-stretch: 1;
+                }
+            }
+        }
+    }
+}

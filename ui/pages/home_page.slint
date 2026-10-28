@@ -5,11 +5,12 @@ import { Metrics } from "../theme/metrics.slint";
 import { PlusUsageCard, FreeUsageCard } from "../controls/usage_cards.slint";
 import { NewsCard } from "../controls/news_card.slint";
 import { BrokerCard } from "../controls/broker_card.slint";
-import { ConnDetailsCard } from "../controls/conn_details_card.slint";
+import { SessionCard } from "../controls/session_card.slint";
 
 
 import { AccountStatus, LoginState } from "../ui_state.slint";
 import { AnimationBar } from "../controls/animation_bar.slint";
+import { ScrollView } from "std-widgets.slint";
 
 export component HomePage inherits Rectangle {
 
@@ -18,34 +19,38 @@ export component HomePage inherits Rectangle {
 
     background: Colors.background;
 
-    VerticalLayout {
+    ScrollView {
 
-        padding: Metrics.padding_large;
-        spacing: Metrics.spacing_medium;
+        width: parent.width;
+        height: parent.height;
 
-        if AccountStatus.login_status == LoginState.Authenticating : AnimationBar {
-            bar_height: Metrics.conn_anime_height;
-            bar_color: Colors.std_button;
-            running: true;
-            background: transparent;
-        }
+        VerticalLayout {
 
-        if AccountStatus.account_level == "Plus" : PlusUsageCard {
-            extend_clicked => {
-                root.extend_requested();
+            padding: Metrics.padding_large;
+            spacing: Metrics.spacing_medium;
+
+            if AccountStatus.login_status == LoginState.Authenticating : AnimationBar {
+                bar_height: Metrics.conn_anime_height;
+                bar_color: Colors.std_button;
+                running: true;
+                background: transparent;
             }
-        }
 
-        if AccountStatus.account_level == "Free" : FreeUsageCard {
-            upgrade_clicked => {
-                root.upgrade_requested();
+            if AccountStatus.account_level == "Plus" : PlusUsageCard {
+                extend_clicked => {
+                    root.extend_requested();
+                }
             }
-        }
 
-        BrokerCard {}
+            if AccountStatus.account_level == "Free" : FreeUsageCard {
+                upgrade_clicked => {
+                    root.upgrade_requested();
+                }
+            }
 
-        ConnDetailsCard {
-            vertical-stretch: 1;
+            // BrokerCard {}
+
+            SessionCard {}
         }
     }
 }

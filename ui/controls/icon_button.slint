@@ -6,6 +6,7 @@ import { Icons } from "../theme/resources.slint";
 export component IconButton inherits Rectangle {
 
     in property <image> btn_icon;
+    in property <float> icon_scale: 1.0;
     in property <color> btn_color: Colors.std_button;
     in property <bool> hollowed: true;
 
@@ -45,6 +46,6 @@ export component IconButton inherits Rectangle {
 
     icon_image := Image {
         source: btn_icon;
-        height: parent.height * 2 / 3;
+        height: parent.height * icon_scale;
     }
 }
