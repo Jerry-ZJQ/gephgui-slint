@@ -93,6 +93,8 @@ export component AccountInfoCard inherits Rectangle {
     in property <string> plus_expire_date: AccountStatus.expire_date;
     in property <string> invite_code: AccountStatus.invite_code;
     private property <bool> secret_reveal: false;
+    private property <bool> cd_secret: false;
+    private property <bool> cd_inv_code: false;
 
     callback manage_account_clicked();
     callback logout_clicked();
@@ -155,14 +157,25 @@ export component AccountInfoCard inherits Rectangle {
                         }
                     }
 
-                    IconButton {
+                    copy-secret := IconButton {
                         height: Typography.font_body;
                         width: self.height;
                         hollowed: false;
-                        btn_icon: Icons.copy;
+                        btn_icon: cd_secret ? Icons.check : Icons.copy;
                         btn_color: transparent;
                         clicked => {
                             root.copy_secret_clicked();
+                            root.cd_secret = true;
+                            self.click_enabled = false;        
+                        }
+
+                        Timer {
+                            interval: 2000ms;
+                            running: root.cd_secret;
+                            triggered => {
+                                root.cd_secret = false;
+                                copy-secret.click_enabled = true;
+                            }
                         }
                     }
                 }
@@ -214,14 +227,26 @@ export component AccountInfoCard inherits Rectangle {
                             color: Colors.text_main;
                             overflow: elide;
                         }
-                        IconButton {
+
+                        copy-inv-code := IconButton {
                             height: Typography.font_body;
                             width: self.height;
                             hollowed: false;
-                            btn_icon: Icons.copy;
+                            btn_icon: cd_inv_code ? Icons.check : Icons.copy;
                             btn_color: transparent;
                             clicked => {
                                 root.copy_inv_code_clicked();
+                                root.cd_inv_code = true;
+                                self.click_enabled = false;
+                            }
+
+                            Timer {
+                                interval: 2000ms;
+                                running: root.cd_inv_code;
+                                triggered => {
+                                    root.cd_inv_code = false;
+                                    copy-inv-code.click_enabled = true;
+                                }
                             }
                         }
                     }

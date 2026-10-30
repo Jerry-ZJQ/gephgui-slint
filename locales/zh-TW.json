@@ -85,5 +85,5 @@
   "plus_only": "（僅限Plus）",
   "update_available": "更新可用：",
   "go_for_update": " - 點選跳轉至 Github 下載",
-  "app_intro": "Gephgui-slint 是為迷霧通 VPN 開發的圖形介面，使用 Slint toolkit 構建的原生 Rust App。替代迷霧通官方 WebUI（gephgui-wry）的更佳選擇。"
+  "app_intro": "Gephgui-slint 是為迷霧通 VPN 開發的圖形介面，使用 Slint toolkit 構建的原生 Rust App。致力於提供比迷霧通官方 WebUI 客戶端（gephgui-wry）更優秀的使用體驗。"
 }

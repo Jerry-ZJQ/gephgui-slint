@@ -85,5 +85,5 @@
     "plus_only": " (Plus only)",
     "update_available": "Update available:",
     "go_for_update": " - click to download from Github",
-    "app_intro": "Gephgui-slint is a GUI for the Geph VPN, developed with the Slint toolkit and runs as a native Rust App. Best for users who don't like the Geph official WebUI App (gephgui-wry)."
+    "app_intro": "Gephgui-slint is a GUI for the Geph VPN, developed with the Slint toolkit and runs as a native Rust App. Providing a better user experience than the Geph official WebUI client App (gephgui-wry)."
 }

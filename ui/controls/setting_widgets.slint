@@ -4,6 +4,8 @@ import { Typography } from "../theme/typography.slint";
 import { Colors } from "../theme/colors.slint";
 import { SettingActions } from "../ui_state.slint";
 import { StdButton } from "std_button.slint";
+import { IconButton } from "icon_button.slint";
+import { Icons } from "../theme/resources.slint";
 
 
 export component SettingSwitch inherits Rectangle { 
@@ -110,7 +112,7 @@ export component SettingSpinBox inherits Rectangle {
     in property <string> helptext;
     in property <int> max_number;
     in property <int> port_value;
-    private property <int> target;
+    private property <int> target: port_value;
     in property <bool> spinbox_enabled;
 
     callback apply_value(target_value: int);
@@ -154,10 +156,14 @@ export component SettingSpinBox inherits Rectangle {
 
             edited(value) => {
                 target = value;
+                apply_btn.click_enabled = true;
+                apply_btn.hollowed = false;
             }
         }
 
-        StdButton {
+        apply_btn := StdButton {
+            click_enabled: false;
+            hollowed: true;
             btn_text: "√";
             height: 20px;
             width: 16px;
@@ -166,6 +172,8 @@ export component SettingSpinBox inherits Rectangle {
 
             clicked => {
                 root.apply_value(root.target);
+                self.click_enabled = false;
+                self.hollowed = true;
             }
         }
     }

@@ -8,6 +8,7 @@ export component StdButton inherits Rectangle {
     // in property <length> btn_height: Metrics.server_button_height;
     in property <color> btn_color: Colors.std_button;
     in property <bool> hollowed: false;
+    in property <bool> click_enabled: true;
 
     private property <float> button_scale: touch_area.pressed ? 0.97 : 1.0;
 
@@ -34,6 +35,7 @@ export component StdButton inherits Rectangle {
     }
 
     touch_area := TouchArea {
+        enabled: root.click_enabled;
         mouse-cursor: MouseCursor.pointer;
         clicked => {
             root.clicked();

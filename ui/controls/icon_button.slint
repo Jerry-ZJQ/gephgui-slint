@@ -8,6 +8,8 @@ export component IconButton inherits Rectangle {
     in property <image> btn_icon;
     in property <float> icon_scale: 1.0;
     in property <color> btn_color: Colors.std_button;
+
+    in property <bool> click_enabled: true;
     in property <bool> hollowed: true;
 
     private property <float> button_scale: touch_area.pressed ? 0.97 : 1.0;
@@ -38,6 +40,7 @@ export component IconButton inherits Rectangle {
     }
 
     touch_area := TouchArea {
+        enabled: root.click_enabled;
         mouse-cursor: MouseCursor.pointer;
         clicked => {
             root.clicked();

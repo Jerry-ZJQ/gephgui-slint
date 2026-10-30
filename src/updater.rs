@@ -7,6 +7,11 @@ use slint::{ComponentHandle};
 const RELEASE_API: &str = "https://api.github.com/repos/Jerry-ZJQ/geph-slint-pkg/releases/latest";
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
+// App version init
+pub fn init_version(window: &GephWindow) {
+    window.global::<About>().set_app_version(APP_VERSION.into());
+}
+
 #[derive(Debug, Deserialize)]
 pub struct ReleaseInfo {
     pub tag_name: String,
@@ -14,7 +19,7 @@ pub struct ReleaseInfo {
 }
 
 // An update checker via github release API 
-pub async fn check_update() -> anyhow::Result<Option<ReleaseInfo>> {
+async fn check_update() -> anyhow::Result<Option<ReleaseInfo>> {
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(5))
         .user_agent(format!(
@@ -42,7 +47,36 @@ pub async fn check_update() -> anyhow::Result<Option<ReleaseInfo>> {
     }
 }
 
-// App version init
-pub fn init_version(window: &GephWindow) {
-    window.global::<About>().set_app_version(APP_VERSION.into());
+// Periodic update checker - triggers an update check at first call and every 6 hours
+pub fn start_periodic_update_check(window: &GephWindow) {
+    let window_weak = window.as_weak();
+
+    geph5_rt::spawn(async move {
+        loop {
+            // Check immediately at startup, then every 6 hours.
+            match check_update().await {
+                Ok(Some(release)) => {
+                    let window_weak = window_weak.clone();
+
+                    let _ = slint::invoke_from_event_loop(move || {
+                        if let Some(window) = window_weak.upgrade() {
+                            let about = window.global::<About>();
+
+                            about.set_update_available(true);
+                            about.set_latest_version(release.tag_name.into());
+                            about.set_release_url(release.html_url.into());
+                        }
+                    });
+                }
+                Ok(None) => {
+                    eprintln!("Application is up to date");
+                }
+                Err(e) => {
+                    eprintln!("Update check failed: {e}");
+                }
+            }
+
+            tokio::time::sleep(Duration::from_secs(6 * 60 * 60)).await;
+        }
+    }).detach();
 }

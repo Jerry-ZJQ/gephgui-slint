@@ -24,7 +24,7 @@ use slint::{ComponentHandle, SharedString};
 
 use crate::l10n::{apply_language, init_l10n, label_to_language, language_to_label};
 use crate::user::{init_user_prefs};
-use crate::updater::{init_version, check_update};
+use crate::updater::{init_version, start_periodic_update_check};
 
 // Main entrance of the application
 fn main() -> Result<(), slint::PlatformError> {
@@ -47,7 +47,13 @@ fn main() -> Result<(), slint::PlatformError> {
 
     // initiate UI language
     init_l10n(&window, &tray);
+    // Initiate App version display in UI (About Page)
     init_version(&window);
+    // initiate user_prefs: quit_on_close and disconnect_on_quit settings in UI
+    init_user_prefs(&window);
+
+    // Check App update at startup and every 6 hours
+    start_periodic_update_check(&window);
 
     // process Slint callback for language change
     // keep this callback process in main() for now
@@ -55,37 +61,7 @@ fn main() -> Result<(), slint::PlatformError> {
     // introduced in future, consider moving such logics to a new module
     let language_window = window.as_weak();
     let language_tray = tray.as_weak();
-
-    // initiate user_prefs: quit_on_close and disconnect_on_quit settings in UI
-    init_user_prefs(&window);
-
-    // Check App update
-    let update_window = window.as_weak();
-    geph5_rt::spawn(async move {
-        match check_update().await {
-            Ok(Some(release)) => {
-                let window_weak = update_window.clone();
-
-                let _ = slint::invoke_from_event_loop(move || {
-                    if let Some(window) = window_weak.upgrade() {
-                        let about = window.global::<About>();
-
-                        about.set_update_available(true);
-                        about.set_latest_version(release.tag_name.into());
-                        about.set_release_url(release.html_url.into());
-                    }
-                });
-            }
-            Ok(None) => {
-                println!("Application is up to date");
-            }
-            Err(e) => {
-                eprintln!("Update check failed: {e}");
-            }
-        }
-    }).detach();
-
-    // callback process for language change
+    
     window.on_language_changed(move |label: SharedString| {
         let (Some(window), Some(tray)) =
             (language_window.upgrade(), language_tray.upgrade())
