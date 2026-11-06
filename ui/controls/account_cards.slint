@@ -73,6 +73,10 @@ export component LogInCard inherits Rectangle {
                 register_button := StdButton {
                     btn_text: L10n.text.register;
                     hollowed: true;
+                    // disable button since account registration is in development
+                    click_enabled: false;
+                    btn_color: Colors.status_dot_gray;
+
                     clicked => {
                         root.register_clicked();
                     }
@@ -96,8 +100,14 @@ export component AccountInfoCard inherits Rectangle {
     private property <bool> cd_secret: false;
     private property <bool> cd_inv_code: false;
 
+    private property <int> delete_click_countdown: 10;
+    private property <bool> delete_click_cooldown: false;
+    private property <bool> delete_confirm: false;
+    private property <int> delete_unlock_countdown: 10;
+
     callback manage_account_clicked();
     callback logout_clicked();
+    callback delete_account_clicked();
 
     callback copy_secret_clicked();
     callback copy_inv_code_clicked();
@@ -275,14 +285,117 @@ export component AccountInfoCard inherits Rectangle {
 
                 VerticalLineDivider {}
 
-                StdButton {
-                    btn_text: L10n.text.delete-account;
-                    btn_color: Colors.status_dot_red;
+                if !root.delete_confirm : delete-btn := StdButton {
+                    btn_text: L10n.text.delete-account-head + root.delete_click_countdown + L10n.text.delete-account-tail;
                     hollowed: true;
-                    clicked => {
+                    
+                    // disable delete_account button since function is not ready
+                    click_enabled: false;
+                    btn_color: Colors.status_dot_gray;
 
+                    clicked => {
+                        if root.delete_click_countdown < 2 {
+                            root.delete_click_cooldown = false;
+                            root.delete_confirm = true;
+                        }
+                        else {
+                            root.delete_click_countdown -= 1;
+                            root.delete_click_cooldown = true;
+                            delete_timer.restart();
+                        }
+                    }
+
+                    // restore delete_click_countdown to 10 if no continuous click in 0.5 second
+                    delete_timer := Timer {
+                        interval: 500ms;
+                        running: root.delete_click_cooldown;
+                        triggered => {
+                            if root.delete_click_countdown > 0 {
+                                root.delete_click_countdown = 10;
+                                root.delete_click_cooldown = false;
+                            }
+                        }
                     }
                 }
+
+                // Popup DialogBox for delete final confirmation
+                // With 10s lockdown of button click for final consideration
+                if root.delete_confirm : VerticalLayout {
+                    spacing: Metrics.spacing_medium;
+
+                    Text {
+                        text: L10n.text.delete-account + L10n.text.delete-lockdown + root.delete_unlock_countdown;
+                        color: Colors.status_dot_red;
+                        font-size: Typography.font_body;
+                        font-weight: Typography.weight_title;
+                        wrap: word-wrap;
+                    }
+                    Text {
+                        text: L10n.text.delete-warning;
+                        color: Colors.status_dot_red;
+                        font-size: Typography.font_sub_body;
+                        font-weight: Typography.weight_title;
+                        wrap: word-wrap;
+                    }
+                    
+                    StdButton {
+                        btn_text: L10n.text.confirm_delete;
+                        btn_color: root.delete_unlock_countdown < 1 ? Colors.status_dot_red : Colors.status_dot_gray;
+                        hollowed: root.delete_unlock_countdown > 0;
+                        click_enabled: root.delete_unlock_countdown < 1;
+                        clicked => {
+                            root.delete_account_clicked();
+                        }
+                    }
+                    StdButton {
+                        btn_text: L10n.text.cancel_delete;
+                        btn_color: root.delete_unlock_countdown < 1 ? Colors.std_button : Colors.status_dot_gray;
+                        hollowed: true;
+                        click_enabled: root.delete_unlock_countdown < 1;
+                        clicked => {
+                            root.delete_confirm = false;
+                            root.delete_click_countdown = 10;
+                            root.delete_unlock_countdown = 10;
+                        }
+                    }
+
+                    Timer {
+                        interval: 1000ms;
+                        running: root.delete_confirm && root.delete_unlock_countdown > 0;
+                        triggered => {
+                            root.delete_unlock_countdown -= 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+export component AccountRegCard inherits Rectangle {
+
+    callback login_clicked(secret: string);
+
+    VerticalLayout {
+        spacing: Metrics.spacing_small;
+
+        Text {
+            text: L10n.text.registration;
+            font-size: Typography.font_section;
+            font-weight: Typography.weight_title;
+            color: Colors.text_main;
+        }
+
+        Rectangle {
+
+            border-radius: Metrics.radius_card;
+            border-color: Colors.divider;
+            border-width: Metrics.outline_slim;
+            background: Colors.card;
+
+            VerticalLayout {
+                padding: Metrics.padding_large;
+                spacing: Metrics.spacing_small;
             }
         }
     }

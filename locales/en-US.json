@@ -40,11 +40,19 @@
     "logout": "Log Out",
     "register": "Register",
     "register_help": "Not having an account secret?",
+    "registration": "Account Registration",
     "manage_account": "Manage Account",
-    "delete_account": "Delete Account (fast click 10x)",
+    "delete_account": "Delete Account",
+    "delete_account_head": "Delete Account (fast click ",
+    "delete_account_tail": "x)",
+    "delete_warning": "Warning: account delete cannot be withdrawn, and no refunds for Plus users, please handle this operation carefully!",
+    "delete_lockdown": " - lockdown: ",
+    "confirm_delete": "Confirm Delete",
+    "cancel_delete": "Cancel Delete",
     "expire": "Expire: ",
     "days_remain": "Days remaining: ",
     "unlimited": "Umlimited usage",
+    "renew_date": "Usage renew date: ",
     "upgrade": "Upgrade",
     "extend": "Extend",
     "general": "General",
@@ -85,5 +93,5 @@
     "plus_only": " (Plus only)",
     "update_available": "Update available:",
     "go_for_update": " - click to download from Github",
-    "app_intro": "Gephgui-slint is a GUI for the Geph VPN, developed with the Slint toolkit and runs as a native Rust App. Providing a better user experience than the Geph official WebUI client App (gephgui-wry)."
+    "app_intro": "Gephgui-slint is a GUI for the Geph VPN, developed with the Slint toolkit and runs as an open-source native Rust App. Providing a better user experience than the Geph official WebUI client App (gephgui-wry)."
 }

@@ -346,3 +346,21 @@ pub async fn auth_secret(secret: String) -> anyhow::Result<AccountSecretStatus> 
     println!("[RPC resp]: {resp:?}");
     Ok(resp)
 }
+
+// Delete Account via broker_rpc
+// pub async fn delete_account(secret: String) -> anyhow::Result<serde_json::Value> {
+//     let request = JrpcRequest {
+//         jsonrpc: "2.0".into(),
+//         method: "daemon_rpc".into(),
+//         params: vec![
+//             json!("broker_rpc"),
+//             json!(["delete_account", [secret]]),
+//         ],
+//         id: JrpcId::String("req_account_delete".into()),
+//     };
+//     println!("Starting account delete...");
+//     let resp = call_daemon_rpc(request).await?;
+//     println!("Account delete request sent!");
+//     println!("[RPC resp]: {resp:?}");
+//     Ok(resp)
+// }

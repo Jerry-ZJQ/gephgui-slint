@@ -81,6 +81,8 @@ export component GephWindow inherits Window {
     callback auto_selected();
     callback exit_selected(country: string, city: string);
 
+    callback delete_account_requested();
+
     callback toggle_connect();
     callback setting_requested(action: SettingActions, value: int);
     callback server_list_opened();
@@ -88,10 +90,6 @@ export component GephWindow inherits Window {
     callback language_changed(label: string);
     callback quit_on_close_toggled(value: bool);
     callback disconnect_on_quit_toggled(value: bool);
-
-    callback github_requested();
-    callback forum_requested();
-    callback geph_site_requested();
 
     callback copy_secret_requested();
     callback copy_inv_code_requested();
@@ -150,6 +148,10 @@ export component GephWindow inherits Window {
                     root.billing_page_requested();
                 }
 
+                delete_account_requested => {
+                    root.delete_account_requested();
+                }
+
                 copy_secret_requested => {
                     root.copy_secret_requested();
                 }
@@ -175,15 +177,15 @@ export component GephWindow inherits Window {
             }
 
             if (root.current_page == 3) : AboutPage {
-                github_clicked => {
-                    root.github_requested();
-                }
-                forum_clicked => {
-                    root.forum_requested();
-                }
-                official_clicked => {
-                    root.geph_site_requested();
-                }
+                // github_clicked => {
+                //     root.github_requested();
+                // }
+                // forum_clicked => {
+                //     root.forum_requested();
+                // }
+                // official_clicked => {
+                //     root.geph_site_requested();
+                // }
             }
         }
 

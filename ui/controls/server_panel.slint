@@ -20,7 +20,6 @@ export component AutoButton inherits Rectangle {
     clip: true;
 
     TouchArea {
-
         mouse-cursor: MouseCursor.pointer;
         clicked => {
             root.clicked();
@@ -57,7 +56,6 @@ export component AutoButton inherits Rectangle {
                 text: L10n.text.auto;
                 horizontal-alignment: left;
                 vertical-alignment: center;
-                // y: 2px;
                 font-size: Typography.font_body;
                 font-weight: Typography.weight_title;
                 color: Colors.text_main;
@@ -90,7 +88,6 @@ export component ServerButton inherits Rectangle {
     clip: true;
 
     if enabled : TouchArea {
-
         mouse-cursor: MouseCursor.pointer;
         clicked => {
             root.clicked(root.country, root.city);
@@ -124,7 +121,7 @@ export component ServerButton inherits Rectangle {
             Text {
                 width: parent.width;
                 height: parent.height;
-                text: country + " / " + city;
+                text: country + " / " + city + (enabled ? "" : L10n.text.plus-only);
                 horizontal-alignment: left;
                 vertical-alignment: center;
                 font-size: Typography.font_body;

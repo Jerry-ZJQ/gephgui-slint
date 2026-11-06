@@ -199,6 +199,8 @@ impl UiService {
         // println!("[UiRpc] UiServerSections: {ui_server_sections:?}");
 
         let _ = self.server_sections_tx.send(ui_server_sections);
+        // check and process server selection fallback
+        self.account_downgrade_fallback().await;
 
         Ok(())
     }
@@ -441,7 +443,7 @@ impl UiService {
                         println!("[Poller] UserInfo error: {e:?}");
                     }
                     // poll NetStatus right after account_level updated for ServerList refresh
-                    self.poll_net_status();
+                    // self.poll_net_status();
                 }
 
                 // Immdiate refresh if triggered by calling poll_user_info()
@@ -593,5 +595,75 @@ impl UiService {
 
     pub async fn clear_service(&self) {
         *self.raw_state.write().await = RpcRawStates::default();
+    }
+
+    // Process the server selection fallback to Auto
+    // when account level downgrades from Plus to Free
+    // the fallback is triggered when account is Free but selected server is Plus-only
+    async fn account_downgrade_fallback(&self) {
+        let account_level = self.user_info_tx.borrow().account_level.clone();
+        if account_level != "Free" {
+            return;
+        }
+
+        let selection = self.server_selection_tx.borrow().clone();
+        let UiExitSelection::Manual { country, city } = selection else {
+            return;
+        };
+
+        // no fallback if Server list is loading and empty
+        let sections = self.server_sections_tx.borrow().clone();
+        if sections.is_empty() {
+            return;
+        }
+
+        let selected_server = sections
+            .iter()
+            .flat_map(|section| section.servers.iter())
+            .find(|server| server.country == country && server.city == city);
+
+        // no fallback if no match of selected server and server entry found
+        // in case the server list is incomplete during refresh
+        let Some(selected_server) = selected_server else {
+            return;
+        };
+
+        if selected_server.enabled {
+            return;
+        }
+
+        println!(
+            "[UiService] Selected server {country}/{city} is disabled for Free; falling back to Auto"
+        );
+
+        // call set_auto_selection for fallback
+        self.auto_fallback().await;
+    }
+
+    async fn auto_fallback(&self) {
+        let conn_info = self.current_conn_info().await;
+
+        match conn_info.state {
+            UiConnState::Disconnected => {
+                if let Err(e) =
+                    manager::set_exit_constraint(&UiExitSelection::Auto).await
+                {
+                    println!("[UiService] Set Auto ExitConstraint failed: {e:?}");
+                }
+            }
+            _ => {
+                let mut settings = self.current_tunnel_settings().await;
+                settings.exit_constraint =
+                    geph5_broker_protocol::ExitConstraint::Auto;
+
+                if let Err(e) = manager::restart_daemon(settings).await {
+                    println!(
+                        "[UiService] Restart daemon failed for Auto selection: {e:?}"
+                    );
+                }
+            }
+        }
+
+        self.poll_tunnel_settings();
     }
 }

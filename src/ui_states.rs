@@ -523,7 +523,7 @@ impl Default for UiTunnelSettings {
             allow_direct: false,
             ads_filter: false,
             adult_filter: false,
-            allow_lan: false,
+            allow_lan: true,
             bypass_prc: false,
             global_vpn: true,
             proxy_settings: UiProxySettings::default(),
@@ -568,8 +568,6 @@ pub struct UiConnInfo {
     pub city: String,
     pub exit: String,
     pub sessions: Vec<UiSessionGroup>,
-    // pub bridge: String,
-    // pub protocol: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -587,8 +585,6 @@ impl Default for UiConnInfo {
             city: String::new(),
             exit: String::new(),
             sessions: Vec::new(),
-            // bridge: String::new(),
-            // protocol: String::new(),
         }
     }
 }

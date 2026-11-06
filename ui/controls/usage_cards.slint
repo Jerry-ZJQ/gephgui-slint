@@ -134,6 +134,12 @@ export component PlusUsageCard inherits Rectangle {
                                 : AccountStatus.remaining_percentage;
                             }
                         }
+
+                        if AccountStatus.remaining_usage != "Unlimited" : Text {
+                            text: L10n.text.renew_date + AccountStatus.renew_date;
+                            font-size: Typography.font_sub_body;
+                            color: Colors.text_main;
+                        }
                     }
                 }
             }

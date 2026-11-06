@@ -43,10 +43,8 @@ pub fn load_secret() -> Option<String> {
 
 // Login if no available secret from settings.json
 pub async fn user_login(secret: String) -> anyhow::Result<AccountSecretCurrent> {
-    // Remove non-effective chars from received secret before authentication
-    let secret: String = secret.chars()
-        .filter(|c| c.is_ascii_digit())
-        .collect();
+
+    let secret: String = secret.to_string();
 
     anyhow::ensure!(!secret.is_empty(), "Secret cannot be empty");
 
@@ -186,8 +184,7 @@ pub fn init_user_prefs(window: &GephWindow) {
 pub fn open_billing_page(secret: &str) -> anyhow::Result<()> {
     let url = format!(
         "https://geph.io/billing/login_secret?secret={}",
-        url::form_urlencoded::byte_serialize(secret.as_bytes())
-            .collect::<String>()
+        url::form_urlencoded::byte_serialize(secret.as_bytes()).collect::<String>()
     );
 
     webbrowser::open(&url)?;
@@ -195,15 +192,15 @@ pub fn open_billing_page(secret: &str) -> anyhow::Result<()> {
 }
 
 // in-App urls
-pub const GITHUB_URL: &str = "https://github.com/Jerry-ZJQ/geph-slint-pkg";
-pub const GEPH_WEBSITE_URL: &str = "https://geph.io/";
-pub const GEPH_FORUM_URL: &str = "https://community.geph.io/t/topic/22395";
+// pub const GITHUB_URL: &str = "https://github.com/Jerry-ZJQ/geph-slint-pkg";
+// pub const GEPH_WEBSITE_URL: &str = "https://geph.io/";
+// pub const GEPH_FORUM_URL: &str = "https://community.geph.io/t/topic/22395";
 
 // Common function to open a url as args
-pub fn open_url(url: &str) -> anyhow::Result<()> {
-    webbrowser::open(url)?;
-    Ok(())
-}
+// pub fn open_url(url: &str) -> anyhow::Result<()> {
+//     webbrowser::open(url)?;
+//     Ok(())
+// }
 
 // Copy texts to OS clipboard
 pub fn copy_to_clipboard(text: &str) -> Result<()> {

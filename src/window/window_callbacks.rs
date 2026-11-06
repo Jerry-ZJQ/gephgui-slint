@@ -1,11 +1,7 @@
 use std::sync::Arc;
 
 use crate::user::{
-    GEPH_FORUM_URL,
-    GEPH_WEBSITE_URL,
-    GITHUB_URL,
     open_billing_page,
-    open_url,
     user_login,
     user_logout,
     copy_to_clipboard
@@ -295,7 +291,10 @@ pub fn register_callbacks(window: &GephWindow, ui_svc: Arc<UiService>) {
     let login_service = Arc::clone(&service);
     window.on_login_requested(move |secret| {
         let login_service = Arc::clone(&login_service);
-        let secret = secret.to_string();
+        // Remove non-effective chars from received secret before authentication
+        let secret: String = secret.chars()
+            .filter(|c| c.is_ascii_digit())
+            .collect();
 
         geph5_rt::spawn(async move {
 
@@ -372,23 +371,6 @@ pub fn register_callbacks(window: &GephWindow, ui_svc: Arc<UiService>) {
         }).detach();
     });
 
-    // callback process for in-app urls opening in browser
-    window.on_github_requested(|| {
-        if let Err(e) = open_url(GITHUB_URL) {
-            eprintln!("Failed to open GitHub: {e:#}");
-        }
-    });
-    window.on_forum_requested(|| {
-        if let Err(e) = open_url(GEPH_FORUM_URL) {
-            eprintln!("Failed to open Geph Forum: {e:#}");
-        }
-    });
-    window.on_geph_site_requested(|| {
-        if let Err(e) = open_url(GEPH_WEBSITE_URL) {
-            eprintln!("Failed to open Geph official site: {e:#}");
-        }
-    });
-
     // callback for copying secret to clipboard
     let copy_secret_service = service.clone();
     window.on_copy_secret_requested(move || {
@@ -412,4 +394,16 @@ pub fn register_callbacks(window: &GephWindow, ui_svc: Arc<UiService>) {
             }
         }).detach();
     });
+
+    // callback for delete account
+    // let delete_account_service = service.clone();
+    // window.on_delete_account_requested(move || {
+    //     let service = Arc::clone(&delete_account_service);
+    //     geph5_rt::spawn(async move {
+    //         let secret = service.current_secret().await.unwrap();
+            
+    //         let _ = manager::delete_account(secret).await;
+    //         eprintln!("Account deleted!");
+    //     }).detach();
+    // });
 }

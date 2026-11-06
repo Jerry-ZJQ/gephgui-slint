@@ -169,6 +169,7 @@ pub fn sync_user_info(
     account_status.set_remaining_days(user_info.remaining_days.clone().into());
     account_status.set_remaining_percentage(user_info.remaining_percent.clone());
     account_status.set_remaining_usage(user_info.remaining_usage.clone().into());
+    account_status.set_renew_date(user_info.renew_date.clone().into());
 
     account_status.set_secret(secret.into());
     account_status.set_invite_code(invite_code.into());

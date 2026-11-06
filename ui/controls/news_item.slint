@@ -4,6 +4,7 @@ import { Metrics } from "../theme/metrics.slint";
 
 export component NewsItem inherits Rectangle {
 
+    in property <string> news_category: "[Geph-slint]";
     in property <string> news_title: "News item";
     in property <string> news_body: "News body";
     in property <bool> clickable: false;
@@ -20,7 +21,7 @@ export component NewsItem inherits Rectangle {
             spacing: Metrics.spacing_tiny;
 
             Text {
-                text: root.news_title;
+                text: root.news_category + " " + root.news_title;
                 font-size: Typography.font_body;
                 font-weight: Typography.weight_title;
                 color: Colors.text_main;

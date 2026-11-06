@@ -13,9 +13,9 @@ import { NewsItem } from "../controls/news_item.slint";
 
 export component AboutPage inherits Rectangle {
 
-    callback github_clicked();
-    callback forum_clicked();
-    callback official_clicked();
+    private property <string> github_url: "https://github.com/Jerry-ZJQ/geph-slint-pkg";
+    private property <string> geph_forum_url: "https://community.geph.io/t/topic/22395";
+    private property <string> geph_official_url: "https://geph.io/";
 
     background: Colors.background;
 
@@ -29,7 +29,7 @@ export component AboutPage inherits Rectangle {
 
             if About.update-available : NewsItem {
                 news_title: L10n.text.update-available;
-                news_body: "Version " + About.latest-version + L10n.text.go-for-update;
+                news_body: About.latest-version + L10n.text.go-for-update;
                 clickable: true;
                 url: About.release-url;
             }
@@ -46,21 +46,21 @@ export component AboutPage inherits Rectangle {
                 btn_icon: Icons.github;
                 icon_scale: 0.8;
                 clicked => {
-                    root.github_clicked();
+                    Platform.open-url(github_url);
                 }
             }
             IconButton {
                 btn_icon: Icons.geph_forum;
                 icon_scale: 0.7;
                 clicked => {
-                    root.forum_clicked();
+                    Platform.open-url(geph_forum_url);
                 }
             }
             IconButton {
                 btn_icon: Icons.gephlogo;
                 icon_scale: 0.7;
                 clicked => {
-                    root.official_clicked();
+                    Platform.open-url(geph_official_url);
                 }
             }
         }
